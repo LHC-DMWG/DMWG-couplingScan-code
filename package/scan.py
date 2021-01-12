@@ -147,4 +147,4 @@ class DMVectorModelScan(DMModelScan):
             )
 
 
-    return width
+        return width
