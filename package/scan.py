@@ -43,7 +43,7 @@ class DMModelScan(abc.ABC):
     gdm: float
     gl: float
     _coupling: str
-    
+
     @abc.abstractmethod
     def mediator_total_width(self):
         pass
@@ -101,11 +101,14 @@ class DMVectorModelScan(DMModelScan):
         pass
 
     def mediator_partial_width_quarks(self):
+        '''
+        On-shell width for mediator -> q q.
+        '''
         width = 0
         for mq in Quarks:
             iwidth = 3 * self.gq**2 * self.mmed / \
                     (12 * PI) * alpha(mq, self.mmed) * beta(mq, self.mmed)
-            
+
             # Only add width for mq < mmed
             width = np.where(
                 mq < self.mmed * 0.5,
@@ -115,6 +118,9 @@ class DMVectorModelScan(DMModelScan):
         return width
 
     def mediator_partial_width_dm(self):
+        '''
+        On-shell width for mediator -> DM DM.
+        '''
         width = self.gdm**2 * self.mmed / (12 * PI) * alpha(self.mdm, self.mmed) * beta(self.mdm, self.mmed)
         return np.where(
             self.mdm < self.mmed * 0.5,
@@ -123,14 +129,22 @@ class DMVectorModelScan(DMModelScan):
         )
 
     def mediator_partial_width_leptons(self):
-        width = 0
+        '''
+        On-shell width for mediator -> l l, where l is a charged or neutral lepton.
+        '''
+        # Neutrinos
+        width = self.gl**2 / (24*PI) * self.mmed
+
+        # Charged leptons
         for ml in Leptons:
             iwidth = self.gl**2 * self.mmed / (12*PI) * alpha(ml, self.mmed) / beta(ml, self.mmed)
-            
+
             # Only add width for ml < mmed
             width = np.where(
                 ml < self.mmed * 0.5,
                 width + iwidth,
                 width
             )
+
+
     return width
