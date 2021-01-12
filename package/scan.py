@@ -71,22 +71,43 @@ class DMScalarModelScan(DMModelScan):
     _coupling: str = 'scalar'
 
     def mediator_total_width(self):
-        # TODO
+        return self.mediator_partial_width_quarks() + self.mediator_partial_width_dm() + self.mediator_partial_width_gluon()
         pass
-
+    
     def mediator_partial_width_quarks(self):
-        # TODO
-        pass
+        width = 0
+        v = 246
+        for mq in Quarks:
+            yq = np.sqrt(2) * mq / v
+            iwidth = 3 * self.gq**2 * yq**2 * self.mmed / \
+                    (16 * PI) * beta(mq, self.mmed)**3
+
+            # Only add width for mq < mmed
+            width = np.where(
+                mq < self.mmed * 0.5,
+                width + iwidth,
+                width
+            )
+        return width
 
     def mediator_partial_width_dm(self):
-        gamma = self.gdm **2 * self.mmed / (8 * PI) * beta(self.mdm, self.mmed) ** 3
+        width = self.gdm **2 * self.mmed / (8 * PI) * beta(self.mdm, self.mmed) ** 3
         return np.where(
             self.mdm < self.mmed * 0.5,
-            gamma,
+            width,
             0
         )
+    
+     def mediator_partial_width_gluon(self):
+        alphas = 0.130
+        v = 246
+        width = alphas ** 2 * self.gq**2 * self.mmed**3 / (32 * PI**3 * v**2)
+        width = width * np.abs(fs(4 * (Quarks.top / self.mmed)**2))**2
+        return width
 
-
+    def fs(tau):
+        tau = np.complex(tau, 0)
+        return tau * (1 + (1 - tau) * (np.arctan(1. / np.sqrt(tau - 1)))**2)
 
 @dataclass
 class DMVectorModelScan(DMModelScan):
