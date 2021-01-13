@@ -6,7 +6,7 @@ with open('requirements.txt') as f:
 
 __version__ = "0.0.1"
 ext_modules = [
-    Pybind11Extension("lhapdf_integrands",
+    Pybind11Extension("lhapdfwrap",
         ["src/lhapdf_integrands.cpp"],
         # Example: passing in the version to the compiled code
         define_macros = [('VERSION_INFO', __version__)],

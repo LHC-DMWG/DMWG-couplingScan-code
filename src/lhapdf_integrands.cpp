@@ -35,9 +35,9 @@ double IntegrandHandler::integrand_hadronic_vector(int n, double x1, double x2, 
 // Parton-level cross section integrand: axial-vector
 double IntegrandHandler::integrand_parton_axialvector(int n, double S, double Gamma, double M, double mDM) {
 
-     if (S < 4.*mDM**2) return 0;
-     double numerator = (S - 4.*mDM**2)**(3./2.);
-     double denominator = sqrt(S)*(Gamma**2 * M**2 + (M**2 - S)**2);
+     if (S < 4.*pow(mDM,2)) return 0;
+     double numerator = pow((S - 4.*pow(mDM,2)),(3./2.));
+     double denominator = sqrt(S)*(pow(Gamma,2) * pow(M,2) + pow((pow(M,2) - S),2));
      return numerator/denominator;
  }
 
@@ -61,7 +61,7 @@ PYBIND11_MODULE(lhapdfwrap, m) {
     m.doc() = R"pbdoc(
         Pybind11 for wrapping lhapdf IntegrandHandler
         -----------------------
-        .. currentmodule:: lhapdf_integrands
+        .. currentmodule:: lhapdfwrap
         .. autosummary::
            :toctree: _generate
            add
