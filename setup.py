@@ -4,11 +4,21 @@ from pybind11.setup_helpers import Pybind11Extension, build_ext
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
+def get_lhapdf_info() :
+   import subprocess
+   linker_flags = subprocess.check_output(["lhapdf-config", "--libs"])
+   print(linker_flags)
+
+#get_lhapdf_info()
+
 __version__ = "0.0.1"
 ext_modules = [
-    Pybind11Extension("lhapdfwrap",
-        ["src/lhapdf_integrands.cpp"],
-        # Example: passing in the version to the compiled code
+    Pybind11Extension(
+        "lhapdfwrap",
+        sources = ["src/lhapdf_integrands.cpp"],
+        library_dirs = ['/usr/local/Cellar/lhapdf/6.2.1/lib'],
+        libraries = ['LHAPDF'],
+        include_dirs = ['/usr/local/Cellar/lhapdf/6.2.1/include'],
         define_macros = [('VERSION_INFO', __version__)],
         ),
 ]
