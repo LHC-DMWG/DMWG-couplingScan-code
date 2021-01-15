@@ -69,6 +69,7 @@ PYBIND11_MODULE(lhapdfwrap, m) {
     )pbdoc";
 
     py::class_<IntegrandHandler>(m, "IntegrandHandler")
+        .def(py::init<std::string,double>())
         .def("integrand_parton_vector", &IntegrandHandler::integrand_parton_vector, R"pbdoc(
         Parton-level cross section integrand for vector mediators.)pbdoc")
        .def("integrand_hadronic_vector", &IntegrandHandler::integrand_hadronic_vector, R"pbdoc(

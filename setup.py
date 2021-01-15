@@ -4,12 +4,15 @@ from pybind11.setup_helpers import Pybind11Extension, build_ext
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
-def get_lhapdf_info() :
+# Detailed examples: 
+# https://github.com/pybind/pybind11_benchmark/blob/master/setup.py
+# https://github.com/wichert/pybind11-example/blob/master/setup.py
+def get_lhapdf_includes() :
    import subprocess
    linker_flags = subprocess.check_output(["lhapdf-config", "--libs"])
    print(linker_flags)
 
-#get_lhapdf_info()
+#get_lhapdf_includes()
 
 __version__ = "0.0.1"
 ext_modules = [

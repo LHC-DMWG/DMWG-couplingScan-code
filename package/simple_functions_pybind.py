@@ -8,7 +8,9 @@ import math
 
 ## Believe that full cross section is not really analytically integrable.
 ## New attempt is to do it numerically per point.
-ECM = 13000.**2                    
+ECM = 13000.**2
+
+wrapper = pdfwrap.IntegrandHandler("NNPDF30_nlo_as_0118", ECM)
 
 ## Integrate and multiply by couplings to obtain full cross sections
 def relative_monox_xsec_parton_vector(M, mDM, gq, gDM, gl) :
@@ -17,7 +19,7 @@ def relative_monox_xsec_parton_vector(M, mDM, gq, gDM, gl) :
   # Give integration some points of interest to check, to help
   # it discover the resonance peak.
   intpoints = [M,M**2-gamma,M**2,M**2+gamma]
-  integral = integrate.quad(pdfwrap.integrand_parton_vector,4.*mDM**2,ECM,args=(gamma,M,mDM),points=intpoints,limit=500)
+  integral = integrate.quad(wrapper.integrand_parton_vector,4.*mDM**2,ECM,args=(gamma,M,mDM),points=intpoints,limit=500)
   # Use when checking integral precision
   #print("Est.",integral[0],"pm",integral[1])  
   xsec = gq**2 * gDM**2 * integral[0]
@@ -30,7 +32,7 @@ def relative_monox_xsec_parton_axial(M, mDM, gq, gDM, gl) :
   # Give integration some points of interest to check, to help
   # it discover the resonance peak.
   intpoints = [M,M**2-gamma,M**2,M**2+gamma]
-  integral = integrate.quad(pdfwrap.integrand_parton_axialvector,4.*mDM**2,ECM,args=(gamma,M,mDM),points=intpoints,limit=500)
+  integral = integrate.quad(wrapper.integrand_parton_axialvector,4.*mDM**2,ECM,args=(gamma,M,mDM),points=intpoints,limit=500)
   # Use when checking integral precision
   #print("Est.",integral[0],"pm",integral[1])
   xsec = gq**2 * gDM**2 * integral[0]
@@ -75,7 +77,7 @@ def relative_monox_xsec_hadron_vector(M, mDM, gq, gDM, gl) :
     # Variables of integration are x1 and x2
     # Limits and options are functions.
     # The limits are similarly functions.   
-    integral = integrate.nquad(pdfwrap.integrand_hadronic_vector,[limit_x1,limit_x2],args=(q_pid,gamma,M,mDM),opts=[opts_x1,opts_x2])    
+    integral = integrate.nquad(wrapper.integrand_hadronic_vector,[limit_x1,limit_x2],args=(q_pid,gamma,M,mDM),opts=[opts_x1,opts_x2])    
     xsec = xsec + integral[0]
   return gq**2 * gDM**2 * xsec
 
@@ -88,7 +90,7 @@ def relative_monox_xsec_hadron_axial(M, mDM, gq, gDM, gl) :
     # Variables of integration are x1 and x2
     # Limits and options are functions.
     # The limits are similarly functions.    
-    integral = integrate.nquad(pdfwrap.integrand_hadronic_axialvector,[limit_x1,limit_x2],args=(q_pid,gamma,M,mDM),opts=[opts_x1,opts_x2],full_output=True) 
+    integral = integrate.nquad(wrapper.integrand_hadronic_axialvector,[limit_x1,limit_x2],args=(q_pid,gamma,M,mDM),opts=[opts_x1,opts_x2],full_output=True) 
     xsec = xsec + integral[0]
   return gq**2 * gDM**2 * xsec
 
