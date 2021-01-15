@@ -12,7 +12,7 @@ IntegrandHandler::IntegrandHandler(const std::string& setname, double ECM) {
 }
 
 // Parton-level cross section integrand: vector
-double IntegrandHandler::integrand_parton_vector(int n, double S, double Gamma, double M, double mDM) {
+double IntegrandHandler::integrand_parton_vector(double S, double Gamma, double M, double mDM) {
 
      // Zero for S < 4 mDM^2, so just return that.
      if (S < 4.*pow(mDM,2)) return 0;
@@ -22,10 +22,10 @@ double IntegrandHandler::integrand_parton_vector(int n, double S, double Gamma, 
 }
 
 // Hadron-level cross section integrand: vector
-double IntegrandHandler::integrand_hadronic_vector(int n, double x1, double x2, double pid, double Gamma, double M, double mDM) {
+double IntegrandHandler::integrand_hadronic_vector(double x1, double x2, double pid, double Gamma, double M, double mDM) {
 
      double sHat = m_ECM*x1*x2;
-     double integrand_basic = integrand_parton_vector(4, sHat, Gamma, M, mDM );
+     double integrand_basic = integrand_parton_vector(sHat, Gamma, M, mDM );
      double total_integrand = m_PDFSet->xfxQ2(pid,x1,sHat) * m_PDFSet->xfxQ2(-pid,x2,sHat) * integrand_basic;
      // These numbers are super tiny so scale them up to make this calculable
      // Overall scale doesn't matter, only relative scales
@@ -33,7 +33,7 @@ double IntegrandHandler::integrand_hadronic_vector(int n, double x1, double x2, 
  }
 
 // Parton-level cross section integrand: axial-vector
-double IntegrandHandler::integrand_parton_axialvector(int n, double S, double Gamma, double M, double mDM) {
+double IntegrandHandler::integrand_parton_axialvector(double S, double Gamma, double M, double mDM) {
 
      if (S < 4.*pow(mDM,2)) return 0;
      double numerator = pow((S - 4.*pow(mDM,2)),(3./2.));
@@ -42,10 +42,10 @@ double IntegrandHandler::integrand_parton_axialvector(int n, double S, double Ga
  }
 
 // Hadron level cross section integrand: axial-vector
-double IntegrandHandler::integrand_hadronic_axialvector(int n, double x1, double x2, double pid, double Gamma, double M, double mDM) {
+double IntegrandHandler::integrand_hadronic_axialvector(double x1, double x2, double pid, double Gamma, double M, double mDM) {
 
      double sHat = m_ECM*x1*x2;
-     double integrand_basic = integrand_parton_axialvector(4, sHat, Gamma, M, mDM);
+     double integrand_basic = integrand_parton_axialvector(sHat, Gamma, M, mDM);
      double total_integrand = m_PDFSet->xfxQ2(pid,x1,sHat) * m_PDFSet->xfxQ2(-pid,x2,sHat) * integrand_basic;
      // Again, scale up
      return 1e8*total_integrand;
