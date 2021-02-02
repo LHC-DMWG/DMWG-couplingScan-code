@@ -29,8 +29,9 @@ def beta(x, y):
     """
     Convenience function that implements part of the width formulae.
     """
-    if 1 - 4 * x**2 / y**2 >= 0: return np.sqrt(1 - 4 * x**2 / y**2)
-    else: return 0
+    x = np.complex(x,0)
+    y = np.complex(y,0)
+    return np.sqrt(1 - 4 * x**2 / y**2)
 
 @dataclass
 class DMScalarModelScan:
@@ -79,8 +80,9 @@ class DMScalarModelScan:
         return width
 
     def fs(self,tau):
+        tau = np.complex(tau,0)
         return tau * (1 + (1 - tau) * (np.arctan(1. / np.sqrt(tau - 1)))**2)
-    
+        
 @dataclass
 class DMPseudoModelScan:
     '''
@@ -128,6 +130,7 @@ class DMPseudoModelScan:
         return width
 
     def fps(self,tau):
+        tau = np.complex(tau,0)
         return tau * (np.arctan(1. / np.sqrt(tau - 1)))**2
 
 @dataclass
