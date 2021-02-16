@@ -1,2 +1,4 @@
 *__pycache__
+*.so
 *.DS_Store
+build/
