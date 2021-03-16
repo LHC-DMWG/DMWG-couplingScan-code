@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 from pybind11.setup_helpers import Pybind11Extension, build_ext
-
+import subprocess
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
@@ -8,20 +8,24 @@ with open('requirements.txt') as f:
 # https://github.com/pybind/pybind11_benchmark/blob/master/setup.py
 # https://github.com/wichert/pybind11-example/blob/master/setup.py
 def get_lhapdf_includes() :
-   import subprocess
-   linker_flags = subprocess.check_output(["lhapdf-config", "--libs"])
-   print(linker_flags)
+    libdir = subprocess.check_output(["lhapdf-config", "--libdir"])
+    incdir = subprocess.check_output(["lhapdf-config", "--libdir"])
+    if not libdir or not incdir :
+        print("You must have lhapdf installed to use this tool!")
+        exit(1)
+    return libdir,incdir
 
-#get_lhapdf_includes()
+
+lhapdf_dirs = get_lhapdf_includes()
 
 __version__ = "0.0.1"
 ext_modules = [
     Pybind11Extension(
         "lhapdfwrap",
         sources = ["src/lhapdf_integrands.cpp"],
-        library_dirs = ['/usr/local/Cellar/lhapdf/6.2.1/lib'],
+        library_dirs = [lhapdf_dirs[0]],
         libraries = ['LHAPDF'],
-        include_dirs = ['/usr/local/Cellar/lhapdf/6.2.1/include'],
+        include_dirs = [lhapdf_dirs[1]],
         define_macros = [('VERSION_INFO', __version__)],
         ),
 ]
