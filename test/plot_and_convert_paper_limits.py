@@ -170,39 +170,3 @@ for scenario in scenarios.keys() :
   scenarios[scenario]["yvals"] = array_y
   scenarios[scenario]["zvals"] = array_z
 
-
-# Compare each of my contours to official ones.
-import ROOT
-inputDir = "/afs/cern.ch/work/k/kpachal/DMSP/dmcombinationandinterpretation/inputs/av_results_monojet_36ifb/"
-scenario_files = {
-  "AV_gq0p25_gchi1p0" : "Monojet_A1_MassMassplot_36ifb.root",
-  "AV_gq0p1_gl0p1_gchi1p0" : "Monojet_A2_MassMassplot_36ifb.root",
-  "V_gq0p25_gchi1p0" : "Monojet_V1_MassMassplot_36ifb.root",
-  "V_gq0p1_gl0p01_gchi1p0" : "Monojet_V2_MassMassplot_36ifb.root"
-}
-
-from matplotlib.path import Path
-print("Beginning plotting.")
-for scenario in scenarios.keys() :
-
-  this_scenario = scenarios[scenario]
-
-  # Get TGraph and convert to arrays
-  infile = ROOT.TFile.Open(inputDir+scenario_files[scenario],"READ")
-  curve = infile.Get("obs_contour")
-  xvals = []
-  yvals = []
-  for i in range(curve.GetN()) :
-    xvals.append(curve.GetPointX(i))
-    yvals.append(curve.GetPointY(i))
-
-  # Now make a curve
-  vertices = np.column_stack((xvals, yvals))
-  # Doesn't seem to be working?
-  treatments = [Path.MOVETO]+[Path.LINETO]*(vertices.size-1)
-
-  string_path = mpath.Path(vertices)#, treatments)
-  patch = mpatches.PathPatch(string_path, edgecolor="red", facecolor=None, fill=False, lw=2)
-
-  text_here = "{0}\ng$_{4}$={1}, g$_{5}$={2}, g$_{6}$={3}".format(("Axial-vector" if this_scenario["model"]=="AV" else "Vector"),this_scenario["gq"],this_scenario["gDM"],this_scenario["gl"],"q","\chi","l")
-  make_plot(scenarios[scenario]["xvals"], scenarios[scenario]["yvals"], scenarios[scenario]["zvals"],scenario+"_compare"+plot_tag, addText=text_here, addCurves=[patch],addPoints=True)
