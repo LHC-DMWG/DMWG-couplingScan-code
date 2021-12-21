@@ -282,9 +282,9 @@ class DMVectorModelScan(DMModelScan):
             iwidth = np.piecewise(
                 self.mmed,
                 [ml.value < self.mmed * 0.5],
-                [lambda x : self.gl**2 * x / (12*PI) * alpha(ml.value, x) * beta(ml.value, x)]
+                [lambda x : self.gl**2 * x / (12*PI) * alpha(ml.value, x) * beta(ml.value, x),0]
             )
-        
+            
             width += iwidth
 
         return width
@@ -314,9 +314,6 @@ class DMVectorModelScan(DMModelScan):
             return xsecs
         else :
             xsec = 0
-            # Integrals: variables of integration are x1 and x2
-            # Limits and options are functions.
-            # The limits are similarly functions. 
             for q_pid in range(1,self._nquarks_pdf) :  
                 integral = integrate.nquad(self._wrapper.integrand_hadronic_vector,[self.limit_x1,self.limit_x2],args=(q_pid,gamma_i,mmed_i,mdm_i),opts=[self.opts_x1,self.opts_x2])    
                 xsec = xsec + integral[0]
@@ -401,7 +398,60 @@ class DMAxialModelScan(DMModelScan):
                 [ml.value < self.mmed * 0.5],     
                 [lambda x : self.gl**2 * x / (12*PI) * beta(ml.value, x)**3, 0]
             )
-
-            width += iwidth,
+            
+            width += iwidth
 
         return width
+
+    def propagator_relative(self) :
+        '''
+        Integral of full propagator expression for axial-vector mediator
+        '''        
+        gamma = self.mediator_total_width()
+        arctan_factor = PI/2.0 + np.arctan((self.mmed**2 - 4.*self.mdm**2)/(self.mmed*gamma))
+        sigma = self.gq**2 * self.gdm**2 * arctan_factor/(self.mmed*gamma)
+        return sigma       
+
+    def hadron_level_xsec_monox_relative(self) :
+        '''
+        (Relative) hadron-level cross section for vector mediator to DM
+        '''        
+        gamma = self.mediator_total_width()
+        if type(self.mmed) is np.ndarray or type(self.mdm) is np.ndarray :
+            xsecs = []
+            for mmed_i, mdm_i, gamma_i in zip(self.mmed, self.mdm, gamma) :
+                xsec = 0
+                for q_pid in range(1,self._nquarks_pdf) :  
+                    integral = integrate.nquad(self._wrapper.integrand_hadronic_axialvector,[self.limit_x1,self.limit_x2],args=(q_pid,gamma_i,mmed_i,mdm_i),opts=[self.opts_x1,self.opts_x2],full_output=True) 
+                    xsec = xsec + integral[0]
+                xsecs.append(self.gq**2 * self.gdm**2 * xsec)
+            return xsecs
+        else :
+            xsec = 0
+            for q_pid in range(1,self._nquarks_pdf) :  
+                integral = integrate.nquad(self._wrapper.integrand_hadronic_axialvector,[self.limit_x1,self.limit_x2],args=(q_pid,gamma_i,mmed_i,mdm_i),opts=[opts_x1,opts_x2],full_output=True)
+                xsec = xsec + integral[0]
+            return self.gq**2 * self.gdm**2 * xsec
+
+    # In case of future relevance: parton level relative xsec
+    def parton_level_xsec_monox_relative(self) :
+        '''
+        (Relative) parton-level cross section for vector mediator to DM
+        ''' 
+        gamma = self.mediator_total_width()
+
+        # Integrate is adaptive and fundamentally
+        # doesn't work with broadcasting.
+        # So for this function we are going to have to 
+        # actually do the values one at a time.
+        if type(self.mmed) is np.ndarray or type(self.mdm) is np.ndarray :
+          xsecs = []
+          for mmed_i, mdm_i, gamma_i in zip(self.mmed, self.mdm, gamma) :
+            intpoints = [mmed_i,mmed_i**2-gamma_i,mmed_i**2,mmed_i**2+gamma_i]
+            integral = integrate.quad(self._wrapper.integrand_parton_axialvector,4.*mdm_i**2,self.ECM,args=(gamma_i,mmed_i,mdm_i),points=intpoints,limit=500)
+            xsecs.append(self.gq**2 * self.gdm**2 * integral[0])
+          return np.array(xsecs)
+        else :
+          integral = integrate.quad(self._wrapper.integrand_parton_axialvector,4.*self.mdm**2,self.ECM,args=(gamma,self.mmed,self.mdm),points=intpoints,limit=500)
+          xsec = self.gq**2 * self.gdm**2 * integral[0]
+          return xsec        
