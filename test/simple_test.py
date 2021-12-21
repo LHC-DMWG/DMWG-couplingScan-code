@@ -4,7 +4,7 @@ from package.scan import *
 # numpy broadcasting does its magic
 # scan1 = DMScalarModelScan(
 # mmed=1000,
-# mdm=np.array([1,10,50,100,150,200,250,300,350,400,450]),
+# mdm=np.array([1,10,50,100,150,200,250,300,350,400,450], dtype=float),
 # gq=0.25,
 # gdm=1.0,
 # gl=0.0,
@@ -15,8 +15,8 @@ from package.scan import *
 # # Example two: multiple variables scanned
 # # numpy broadcasting still handles this
 # scan2 = DMScalarModelScan(
-# mmed=3*np.array([1,10,50,100,150,200,250,300,350,400,450]),
-# mdm=np.array([1,10,50,100,150,200,250,300,350,400,450]),
+# mmed=3*np.array([1,10,50,100,150,200,250,300,350,400,450], dtype=float),
+# mdm=np.array([1,10,50,100,150,200,250,300,350,400,450], dtype=float),
 # gq=0.25,
 # gdm=1.0,
 # gl=0.0,
@@ -25,15 +25,15 @@ from package.scan import *
 # print(scan2.mediator_partial_width_dm() / scan2.mmed)
 
 # Example three: propagators, arrays
-scan3 = DMVectorModelScan(mmed=3*np.array([1,10,50,100,150,200,250,300,350,400,450]),
-mdm=np.array([1,10,50,100,150,200,250,300,350,400,450]),
+scan3 = DMVectorModelScan(mmed=3*np.array([1,10,50,100,150,200,250,300,350,400,450], dtype=float),
+mdm=np.array([1,10,50,100,150,200,250,300,350,400,450], dtype=float),
 gq=0.25,
 gdm=1.0,
 gl=0.0,
 )
 print("Scan 3:")
-print(scan3.mediator_partial_width_quarks())
-#print(scan3.propagator_monox_relative())
+#print(scan3.mediator_partial_width_quarks())
+print(scan3.propagator_monox_relative())
 
 # Example four: parton-level, no arrays
 # scan4 = DMVectorModelScan(mmed=1000,
@@ -47,8 +47,8 @@ print(scan3.mediator_partial_width_quarks())
 # print("done")
 
 # # Example four and a half: propagators, arrays
-# scan4p5 = DMVectorModelScan(mmed=3*np.array([1,10,50,100,150,200,250,300,350,400,450]),
-# mdm=np.array([1,10,50,100,150,200,250,300,350,400,450]),
+# scan4p5 = DMVectorModelScan(mmed=3*np.array([1,10,50,100,150,200,250,300,350,400,450], dtype=float),
+# mdm=np.array([1,10,50,100,150,200,250,300,350,400,450], dtype=float),
 # gq=0.25,
 # gdm=1.0,
 # gl=0.0,
@@ -71,8 +71,8 @@ print(scan3.mediator_partial_width_quarks())
 # Or else make it very clear what they're getting.
 # I guess this is better because it allows uneven grids.
 # scan3 = DMScalarModelScan(
-# mmed=3*np.array([1,10]),
-# mdm=np.array([1,10,50,100,150,200,250,300,350,400,450]),
+# mmed=3*np.array([1,10], dtype=float),
+# mdm=np.array([1,10,50,100,150,200,250,300,350,400,450], dtype=float),
 # gq=0.25,
 # gdm=1.0,
 # gl=0.0,
