@@ -32,19 +32,17 @@ gdm=1.0,
 gl=0.0,
 )
 print("Scan 3:")
-#print(scan3.mediator_partial_width_quarks())
 print(scan3.propagator_monox_relative())
 
-# Example four: parton-level, no arrays
+#Example four: parton-level, no arrays
 # scan4 = DMVectorModelScan(mmed=1000,
 # mdm=400,
 # gq=0.25,
 # gdm=1.0,
 # gl=0.0,
 # )
-# print("Scan 4:")
-# print(scan4.parton_level_xsec_monox_relative())
-# print("done")
+print("Scan 4:")
+print(scan3.parton_level_xsec_monox_relative())
 
 # # Example four and a half: propagators, arrays
 # scan4p5 = DMVectorModelScan(mmed=3*np.array([1,10,50,100,150,200,250,300,350,400,450], dtype=float),

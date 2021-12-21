@@ -234,7 +234,6 @@ class DMVectorModelScan(DMModelScan):
             )
             width += iwidth
 
-        print("width is",width,"; mmed type is",self.mmed.dtype)
         return width
 
     def mediator_partial_width_dm(self):
@@ -270,12 +269,7 @@ class DMVectorModelScan(DMModelScan):
 
     # Vector
     def propagator_monox_relative(self) :
-        print("Start")
-        print("Mediator masses:",self.mmed)
-        print("DM masses:",self.mdm
-        )
         gamma = self.mediator_total_width()
-        print("Got gammas:",gamma)
         arctan_factor = PI/2.0 + np.arctan((self.mmed**2 - 4.*self.mdm**2)/(self.mmed*gamma))
         sigma = self.gq**2 * self.gdm**2 * arctan_factor/(self.mmed*gamma)
         return sigma
@@ -288,7 +282,6 @@ class DMVectorModelScan(DMModelScan):
     def parton_level_xsec_monox_relative(self) :
 
         gamma = self.mediator_total_width()
-        intpoints = [self.mmed,self.mmed**2-gamma,self.mmed**2,self.mmed**2+gamma]
 
         # Integrate is adaptive and fundamentally
         # doesn't work with broadcasting.
@@ -296,8 +289,9 @@ class DMVectorModelScan(DMModelScan):
         # actually do the values one at a time.
         xsecs = []
         if type(self.mmed) is np.ndarray or type(self.mdm) is np.ndarray :
-          for mmed_i, mdm_i, gamma_i, points_i in zip(self.mmed, self.mdm, gamma, intpoints) :
-            integral = integrate.quad(self._wrapper.integrand_parton_vector,4.*mdm_i**2,self.ECM,args=(gamma_i,mmed_i,mdm_i),points=points_i,limit=500)
+          for mmed_i, mdm_i, gamma_i in zip(self.mmed, self.mdm, gamma) :
+            intpoints = [mmed_i,mmed_i**2-gamma_i,mmed_i**2,mmed_i**2+gamma_i]
+            integral = integrate.quad(self._wrapper.integrand_parton_vector,4.*mdm_i**2,self.ECM,args=(gamma_i,mmed_i,mdm_i),points=intpoints,limit=500)
             xsecs.append(self.gq**2 * self.gdm**2 * integral[0])
         else :
           integral = integrate.quad(self._wrapper.integrand_parton_vector,4.*self.mdm**2,self.ECM,args=(gamma,self.mmed,self.mdm),points=intpoints,limit=500)
