@@ -75,7 +75,9 @@ class DMModelScan(abc.ABC):
         # For all the others, make sure they have type float.
         for attr in ["mmed", "mdm", "gq", "gdm", "gl"] :
             attrval = getattr(self,attr)
-            if type(attrval) is not np.ndarray :
+            if isinstance(attrval,list) :
+                setattr(self,attr,np.array(attrval,dtype=float))
+            elif type(attrval) is not np.ndarray :
                 setattr(self,attr,np.array([attrval],dtype=float))
             else :
                 setattr(self,attr,attrval.astype(float))
@@ -88,6 +90,10 @@ class DMModelScan(abc.ABC):
         if not (self.gq.shape == self.gdm.shape == self.gl.shape) :
             print("Error: coupling points have mismatching shapes!")
             print("Each point in your scan must have exactly one gq, gdm, and gl.")
+            exit(1)
+        # Only need to check one of these now because we know they match
+        if not (len(self.gq) == 1 or len(self.gq) == len(self.mmed)) :
+            print("Couplings arrays must either be the same length as mass arrays or hold exacctly 1 value")
             exit(1)
 
     @abc.abstractmethod

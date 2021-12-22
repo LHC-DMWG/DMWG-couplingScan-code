@@ -1,4 +1,5 @@
 from package.scan import *
+from package.rescaler import *
 
 # Example one: mostly constant parameters, scan in 1d
 # numpy broadcasting does its magic
@@ -39,8 +40,8 @@ print("Parton level:")
 print(scan3.parton_level_xsec_monox_relative())
 
 #Example 3.3: hadron-level
-print("Hadron level:")
-print(scan3.hadron_level_xsec_monox_relative())
+#print("Hadron level:")
+#print(scan3.hadron_level_xsec_monox_relative())
 
 # Example four: same tests but for axial-vector
 scan4 = DMAxialModelScan(mmed=3*np.array([1,10,50,100,150,200,250,300,350,400,450]),
@@ -57,18 +58,8 @@ print("Parton level:")
 print(scan4.parton_level_xsec_monox_relative())
 
 # Example 4.3: hadron-level
-print("Hadron level:")
-print(scan4.hadron_level_xsec_monox_relative())
+#print("Hadron level:")
+#print(scan4.hadron_level_xsec_monox_relative())
 
-
-# Example N: Inconsistent array sizes
-# broadcasting fails
-# -> Write checks to prevent users from doing this
-scan3 = DMScalarModelScan(
-mmed=3*np.array([1,10]),
-mdm=np.array([1,10,50,100,150,200,250,300,350,400,450]),
-gq=0.25,
-gdm=1.0,
-gl=0.0,
-)
-print(scan3.mediator_partial_width_dm() / scan3.mmed)
+# Now let's try a rescaler.
+rescaleA1 = Rescaler(scan3)
