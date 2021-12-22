@@ -68,6 +68,28 @@ class DMModelScan(abc.ABC):
         import lhapdfwrap as pdfwrap
         _wrapper = pdfwrap.IntegrandHandler("NNPDF30_nlo_as_0118", ECM)
 
+    def __post_init__(self):
+
+        # Various safety controls:
+        # If any starting parameter is just a float, make it into a 1-item array.
+        # For all the others, make sure they have type float.
+        for attr in ["mmed", "mdm", "gq", "gdm", "gl"] :
+            attrval = getattr(self,attr)
+            if type(attrval) is not np.ndarray :
+                setattr(self,attr,np.array([attrval],dtype=float))
+            else :
+                setattr(self,attr,attrval.astype(float))
+
+        # Check that the arrays we have been given match in shape where necessary.
+        if self.mmed.shape != self.mdm.shape :
+            print("Error: mass points have mismatching shapes!")
+            print("These are meant to be matching x and y values. Please fix.")
+            exit(1)
+        if not (self.gq.shape == self.gdm.shape == self.gl.shape) :
+            print("Error: coupling points have mismatching shapes!")
+            print("Each point in your scan must have exactly one gq, gdm, and gl.")
+            exit(1)
+
     @abc.abstractmethod
     def mediator_total_width(self):
         pass
@@ -303,22 +325,16 @@ class DMVectorModelScan(DMModelScan):
         (Relative) hadron-level cross section for vector mediator to DM
         '''        
         gamma = self.mediator_total_width()
-        if type(self.mmed) is np.ndarray or type(self.mdm) is np.ndarray :
-            xsecs = []
-            for mmed_i, mdm_i, gamma_i in zip(self.mmed, self.mdm, gamma) :
-                xsec = 0
-                for q_pid in range(1,self._nquarks_pdf) :  
-                    integral = integrate.nquad(self._wrapper.integrand_hadronic_vector,[self.limit_x1,self.limit_x2],args=(q_pid,gamma_i,mmed_i,mdm_i),opts=[self.opts_x1,self.opts_x2])
-                    xsec = xsec + integral[0]
-                xsecs.append(self.gq**2 * self.gdm**2 * xsec)
-            return xsecs
-        else :
+        xsecs = []
+        for mmed_i, mdm_i, gamma_i in zip(self.mmed, self.mdm, gamma) :
             xsec = 0
             for q_pid in range(1,self._nquarks_pdf) :  
-                integral = integrate.nquad(self._wrapper.integrand_hadronic_vector,[self.limit_x1,self.limit_x2],args=(q_pid,gamma_i,mmed_i,mdm_i),opts=[self.opts_x1,self.opts_x2])    
+                integral = integrate.nquad(self._wrapper.integrand_hadronic_vector,[self.limit_x1,self.limit_x2],args=(q_pid,gamma_i,mmed_i,mdm_i),opts=[self.opts_x1,self.opts_x2])
                 xsec = xsec + integral[0]
-            return self.gq**2 * self.gdm**2 * xsec
-
+            xsecs.append(xsec)
+        # For properly broadcasting gq and gdm dependence
+        xsecs = self.gq**2 * self.gdm**2 * xsecs
+        return xsecs
 
     # In case of future relevance: parton level relative xsec
     def parton_level_xsec_monox_relative(self) :
@@ -331,17 +347,15 @@ class DMVectorModelScan(DMModelScan):
         # doesn't work with broadcasting.
         # So for this function we are going to have to 
         # actually do the values one at a time.
-        if type(self.mmed) is np.ndarray or type(self.mdm) is np.ndarray :
-          xsecs = []
-          for mmed_i, mdm_i, gamma_i in zip(self.mmed, self.mdm, gamma) :
+        # if type(self.mmed) is np.ndarray or type(self.mdm) is np.ndarray :
+        xsecs = []
+        for mmed_i, mdm_i, gamma_i in zip(self.mmed, self.mdm, gamma) :
             intpoints = [mmed_i,mmed_i**2-gamma_i,mmed_i**2,mmed_i**2+gamma_i]
             integral = integrate.quad(self._wrapper.integrand_parton_vector,4.*mdm_i**2,self.ECM,args=(gamma_i,mmed_i,mdm_i),points=intpoints,limit=500)
-            xsecs.append(self.gq**2 * self.gdm**2 * integral[0])
-          return np.array(xsecs)
-        else :
-          integral = integrate.quad(self._wrapper.integrand_parton_vector,4.*self.mdm**2,self.ECM,args=(gamma,self.mmed,self.mdm),points=intpoints,limit=500)
-          xsec = self.gq**2 * self.gdm**2 * integral[0]
-          return xsec
+            xsecs.append(integral[0])
+        xsecs = self.gq**2 * self.gdm**2 * xsecs
+        return xsecs 
+
             
 @dataclass
 class DMAxialModelScan(DMModelScan):
@@ -414,29 +428,23 @@ class DMAxialModelScan(DMModelScan):
 
     def hadron_level_xsec_monox_relative(self) :
         '''
-        (Relative) hadron-level cross section for vector mediator to DM
+        (Relative) hadron-level cross section for axial-vector mediator to DM
         '''        
         gamma = self.mediator_total_width()
-        if type(self.mmed) is np.ndarray or type(self.mdm) is np.ndarray :
-            xsecs = []
-            for mmed_i, mdm_i, gamma_i in zip(self.mmed, self.mdm, gamma) :
-                xsec = 0
-                for q_pid in range(1,self._nquarks_pdf) :  
-                    integral = integrate.nquad(self._wrapper.integrand_hadronic_axialvector,[self.limit_x1,self.limit_x2],args=(q_pid,gamma_i,mmed_i,mdm_i),opts=[self.opts_x1,self.opts_x2],full_output=True) 
-                    xsec = xsec + integral[0]
-                xsecs.append(self.gq**2 * self.gdm**2 * xsec)
-            return xsecs
-        else :
+        xsecs = []
+        for mmed_i, mdm_i, gamma_i in zip(self.mmed, self.mdm, gamma) :
             xsec = 0
             for q_pid in range(1,self._nquarks_pdf) :  
-                integral = integrate.nquad(self._wrapper.integrand_hadronic_axialvector,[self.limit_x1,self.limit_x2],args=(q_pid,gamma_i,mmed_i,mdm_i),opts=[opts_x1,opts_x2],full_output=True)
+                integral = integrate.nquad(self._wrapper.integrand_hadronic_axialvector,[self.limit_x1,self.limit_x2],args=(q_pid,gamma_i,mmed_i,mdm_i),opts=[self.opts_x1,self.opts_x2],full_output=True) 
                 xsec = xsec + integral[0]
-            return self.gq**2 * self.gdm**2 * xsec
+            xsecs.append(xsec)
+        xsecs = self.gq**2 * self.gdm**2 * xsecs
+        return xsecs
 
     # In case of future relevance: parton level relative xsec
     def parton_level_xsec_monox_relative(self) :
         '''
-        (Relative) parton-level cross section for vector mediator to DM
+        (Relative) parton-level cross section for axial-vector mediator to DM
         ''' 
         gamma = self.mediator_total_width()
 
@@ -444,14 +452,10 @@ class DMAxialModelScan(DMModelScan):
         # doesn't work with broadcasting.
         # So for this function we are going to have to 
         # actually do the values one at a time.
-        if type(self.mmed) is np.ndarray or type(self.mdm) is np.ndarray :
-          xsecs = []
-          for mmed_i, mdm_i, gamma_i in zip(self.mmed, self.mdm, gamma) :
+        xsecs = []
+        for mmed_i, mdm_i, gamma_i in zip(self.mmed, self.mdm, gamma) :
             intpoints = [mmed_i,mmed_i**2-gamma_i,mmed_i**2,mmed_i**2+gamma_i]
             integral = integrate.quad(self._wrapper.integrand_parton_axialvector,4.*mdm_i**2,self.ECM,args=(gamma_i,mmed_i,mdm_i),points=intpoints,limit=500)
-            xsecs.append(self.gq**2 * self.gdm**2 * integral[0])
-          return np.array(xsecs)
-        else :
-          integral = integrate.quad(self._wrapper.integrand_parton_axialvector,4.*self.mdm**2,self.ECM,args=(gamma,self.mmed,self.mdm),points=intpoints,limit=500)
-          xsec = self.gq**2 * self.gdm**2 * integral[0]
-          return xsec        
+            xsecs.append(integral[0])
+        xsecs = self.gq**2 * self.gdm**2 * xsecs
+        return xsecs  
