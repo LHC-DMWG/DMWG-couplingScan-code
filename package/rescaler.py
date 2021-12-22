@@ -23,6 +23,11 @@ class Rescaler():
             exit(1)
 
     def check_targets(self,target_gq, target_gdm, target_gl) :
+        '''Need to confirm the target scan coupling values have the same shape.'''        
+        pass
+
+    def create_target_scan(self, target_gq, target_gdm, target_gl) :
+        # We already have the desired mass scans from 
         pass
 
     def rescale_by_br(self,target_gq, target_gdm, target_gl):
@@ -30,7 +35,7 @@ class Rescaler():
         
         # check that the two scans actually make sense
         # i.e. same variables being scanned, etc
-        self.consistency_check(reference_scan, target_scan)
+        target_scan = self.create_target_scan(target_gq, target_gdm, target_gl)
 
         # Create a target scan that has the enormous dimensionality required
         # to broadcast across the full set of scanned values
@@ -41,7 +46,7 @@ class Rescaler():
 
         # Return masses (?) and scale factors for data points
 
-        reference_factor = reference_scan.br_mediator_dm() * reference_scan.gq ** 2
+        reference_factor = self.reference_scan.br_mediator_dm() * self.reference_scan.gq ** 2
         target_factor = target_scan.br_mediator_dm() * target_scan.gq ** 2
 
         return target_factor / reference_factor

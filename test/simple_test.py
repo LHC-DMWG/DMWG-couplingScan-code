@@ -63,3 +63,6 @@ print(scan4.parton_level_xsec_monox_relative())
 
 # Now let's try a rescaler.
 rescaleA1 = Rescaler(scan3)
+A2 = rescaleA1.rescale_by_br(target_gq=0.1,target_gdm=1,target_gl=0.01)
+
+# And let's try a more complicated one.
