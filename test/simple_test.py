@@ -63,6 +63,11 @@ print(scan4.parton_level_xsec_monox_relative())
 
 # Now let's try a rescaler.
 rescaleA1 = Rescaler(scan3)
-A2 = rescaleA1.rescale_by_br(target_gq=0.1,target_gdm=1,target_gl=0.01)
+# What do we want user to provide? Single values or a range?
+# Everything other than hadron level rescaling should be able to take a range I guess.
+# Hadron level should return an error saying just do one and then use another method 
+# from there, can I recommend propagator rescaling.
+scalefactors_A2 = rescaleA1.rescale_by_br_quarks(target_gq=0.1,target_gdm=1,target_gl=0.01,model='axial')
+
 
 # And let's try a more complicated one.

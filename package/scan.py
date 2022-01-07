@@ -45,6 +45,8 @@ def beta(x, y):
 class DMModelScan(abc.ABC):
     '''
     Abstract parent class for scans of different model types.
+    mmed and mdm arrays must be the same length and correspond to 
+    the x and y points of the mass-mass grid being examined.
     '''
     mmed: float
     mdm: float
@@ -93,7 +95,7 @@ class DMModelScan(abc.ABC):
             exit(1)
         # Only need to check one of these now because we know they match
         if not (len(self.gq) == 1 or len(self.gq) == len(self.mmed)) :
-            print("Couplings arrays must either be the same length as mass arrays or hold exacctly 1 value")
+            print("Couplings arrays must either be the same length as mass arrays or hold exactly 1 value")
             exit(1)
 
     @abc.abstractmethod
@@ -464,4 +466,4 @@ class DMAxialModelScan(DMModelScan):
             integral = integrate.quad(self._wrapper.integrand_parton_axialvector,4.*mdm_i**2,self.ECM,args=(gamma_i,mmed_i,mdm_i),points=intpoints,limit=500)
             xsecs.append(integral[0])
         xsecs = self.gq**2 * self.gdm**2 * xsecs
-        return xsecs  
+        return xsecs 
