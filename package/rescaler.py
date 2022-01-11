@@ -17,9 +17,9 @@ class Rescaler():
     def check_ref_scan(self) :
         '''Need to confirm the reference scan makes sense.
         Key items: only one value of each coupling.'''
-        if (self.reference_scan.gq is np.ndarray and len(self.reference_scan.gq) > 1) or \
-            (self.reference_scan.gdm is np.ndarray and len(self.reference_scan.gdm) > 1) or \
-            (self.reference_scan.gl is np.ndarray and len(self.reference_scan.gl) > 1) :
+        if (self.reference_scan.gq == np.ndarray and len(self.reference_scan.gq) > 1) or \
+            (self.reference_scan.gdm == np.ndarray and len(self.reference_scan.gdm) > 1) or \
+            (self.reference_scan.gl == np.ndarray and len(self.reference_scan.gl) > 1) :
             print("You can only have one unique value of each coupling in your reference scan!")
             exit(1)
     
@@ -96,7 +96,7 @@ class Rescaler():
         print(np.size(target_couplings[0]))
         print(np.size(target_couplings[1]))
         print(np.size(target_couplings[2]))
-        if target_ID is 'axial' : 
+        if target_ID == 'axial' : 
             target_scan = DMAxialModelScan(mmed=target_mmed, mdm=target_mdm, gq=target_couplings[0],
                 gdm=target_couplings[1], gl=target_couplings[2])
         # case target_ID is 'vector' :
@@ -188,7 +188,7 @@ class Rescaler():
         self.check_models_methods("propagator",model)
 
         for this_array in target_arrays :
-            if (this_array is np.ndarray and len(this_array) > 1) :
+            if (this_array == np.ndarray and len(this_array) > 1) :
                 print("""Warning: the hadronic rescaling method takes a long time!
                 We don't recommend that you use it for more than one target coupling scenario.
                 Instead, try rescaling to a single target and then using the propagator scaling method
