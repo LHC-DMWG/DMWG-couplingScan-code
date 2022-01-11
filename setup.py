@@ -3,6 +3,7 @@ from setuptools.command.install import install
 from setuptools.command.develop import develop
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 import subprocess
+import sys
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 __version__ = "0.0.1"
@@ -48,13 +49,23 @@ class ModifyDevelop(develop):
 # https://github.com/pybind/pybind11_benchmark/blob/master/setup.py
 # https://github.com/wichert/pybind11-example/blob/master/setup.py
 def get_lhapdf_includes() :
-    libdir = subprocess.check_output(["lhapdf-config", "--libdir"]).decode('ascii').strip()
-    incdir = subprocess.check_output(["lhapdf-config", "--incdir"]).decode('ascii').strip()
-    if not libdir or not incdir :
-       print("You do not have lhapdf installed!")
-       print("This will limit what you can do.")
-       print("If you want to proceed anyway, re-install with option --nolhapdf")
-       exit(1)
+    # Check if we have lhapdf.
+    try :
+        libdir = subprocess.check_output(["lhapdf-config", "--libdir"]).decode('ascii').strip()
+        incdir = subprocess.check_output(["lhapdf-config", "--incdir"]).decode('ascii').strip()
+    except :
+        # Silently skip this on the egg_info step if necessary, and fail later:
+        # ugly, but pip doesn't currently support passing flags to egg_info
+        if ("egg_info" in sys.argv) :
+            print("No lib and inc dirs found by egg_info")
+            libdir = ""
+            incdir = ""
+        else :
+            print("You do not have lhapdf installed!")
+            print("This will limit what you can do.")
+            print("If you want to proceed anyway, re-install with option --nolhapdf")
+            error(1)
+
     return libdir,incdir
 
 def get_extmodules() :
