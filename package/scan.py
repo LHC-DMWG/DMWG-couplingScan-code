@@ -381,13 +381,28 @@ class DMAxialModelScan(DMModelScan):
         On-shell width for mediator -> q q.
         '''
         width = 0
+
+        # Tests
+        print(np.size(self.mmed),np.size(self.gq))
+        iwidth = np.piecewise(
+            self.mmed,
+            [0.1 < self.mmed * 0.5],     
+            [lambda x : 3 * self.gq**2 * x / (12 * PI) * beta(0.1, x)**3, 0]
+        )
+        print("test iwidth:",iwidth)
+
         for mq in Quarks:
             # Only add width for mq < mmed
             iwidth = np.piecewise(
                 self.mmed,
-                [mq.value < self.mmed * 0.5],     
-                [lambda x : 3 * self.gq**2 * x / (12 * PI) * beta(mq.value, x)**3, 0]
-            )
+                [0.1 < self.mmed * 0.5],     
+                [lambda x : 3 * self.gq**2 * x / (12 * PI) * beta(0.1, x)**3, self.gq]
+            )            
+            # iwidth = np.piecewise(
+            #     self.mmed,
+            #     [mq.value < self.mmed * 0.5],     
+            #     [lambda x : 3 * self.gq**2 * x / (12 * PI) * beta(mq.value, x)**3, 0]
+            # )
 
             width += iwidth
 

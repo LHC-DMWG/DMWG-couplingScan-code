@@ -1,4 +1,5 @@
 import numpy as np
+from package.scan import *
 
 # Each rescaler has a reference scan against which the others are scaled.
 class Rescaler():
@@ -69,52 +70,38 @@ class Rescaler():
         # And sets everything to floats.
         target_grid = np.array(np.meshgrid(target_gq,target_gdm,target_gl),dtype=float).reshape(3,-1)
 
-        return target_grid[0],target_grid[1],target_grid[2]
+        return target_grid
 
     def create_target_scan(self, target_ID, target_arrays) :
+
         # We already have the desired mass points from the reference scan.
         # But to make broadcasting work here we will need to increase the dimensionality
         # to include all of the target couplings as well.
+        # This time we don't want meshgrid - we need to keep mass points paired up correctly
 
-        # If only one target, easy. But otherwise need to expand mass arrays from the 
-        # reference scan to correspond to each set of inputs.
-        
-        # example input (6 points): 
-        test_mmed = [10, 10, 20, 20, 30, 30]
-        test_mdm = [1, 2, 1, 4, 1, 6]
-        test_target_gq = [0.25, 0.25, 0.2, 0.2]
-        test_target_gdm = [1, 1, 1, 1]
-        test_target_gl = [0.05, 0.1, 0.05, 0.1]        
+        # Repeat full set of mass points by number of tested couplings,
+        # and individually repeat couplings by number of mass points.
+        n_couplings = np.size(target_arrays,1)
+        n_masspoints = np.size(self.reference_scan.mmed)
+        target_mmed = np.tile(self.reference_scan.mmed, n_couplings)
+        print("target_mmed:",target_mmed)
+        target_mdm = np.tile(self.reference_scan.mdm, n_couplings)
+        print("target_mdm:",target_mdm)
+        target_couplings = np.repeat(target_arrays,n_masspoints,axis=1)
+        print("Full coupling grid:",target_couplings)
 
-        # return values:
-        goal_mmed = [10, 10, 20, 20, 30, 30, 10, 10, 20, 20, 30, 30, 10, 10, 20, 20, 30, 30, 10, 10, 20, 20, 30, 30]
-        goal_mdm = [1, 2, 1, 4, 1, 6, 1, 2, 1, 4, 1, 6, 1, 2, 1, 4, 1, 6, 1, 2, 1, 4, 1, 6]
-        goal_target_gq = [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]
-        goal_target_gdm = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-        goal_target_gl = [0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
-
-        # Test targets: good?
-        print(len(goal_mmed),len(goal_target_gq),len(goal_target_gdm),len(goal_target_gl))
-        my_set = []
-        for a, b, c, d, e in zip(goal_mmed, goal_mdm, goal_target_gq, goal_target_gdm, goal_target_gl) :
-          my_set.append((a,b,c,d,e))
-        for i in sorted(my_set) : print(i)
-
-        # Test algorithm
-        # Repeat full set of mass points by number of tested couplings.
-        # n_couplings = len(self.reference_scan.gq)
-        # target_mmed = # ncouplings repetitions of test_mmed, however that should work
-        # target_mdm = # ncouplings repetitions of target_mmed, as above
-        # target_gq = [ncouplings repetitions of i for i in target_arrays.gq] # fix
-        # target_gdm = [ncouplings repetitions of i for i in target_arrays.gdm] # fix
-        # target_gl = [ncouplings repetitions of i for i in target_arrays.gl] # fix
-
-        # case target_ID is 'axial' :
-        #     target_scan = DMAxialModelScan(mmed=target_mmed, mdm=target_mdm, gq=target_gq,
-        #         gdm=target_gdm, gl=target_gl)
+        # Now create the appropriate scan.
+        print(np.size(target_mmed))
+        print(np.size(target_mdm))
+        print(np.size(target_couplings[0]))
+        print(np.size(target_couplings[1]))
+        print(np.size(target_couplings[2]))
+        if target_ID is 'axial' : 
+            target_scan = DMAxialModelScan(mmed=target_mmed, mdm=target_mdm, gq=target_couplings[0],
+                gdm=target_couplings[1], gl=target_couplings[2])
         # case target_ID is 'vector' :
 
-        #return target_scan
+        return target_scan
 
     def format_output(self, scale_factor, target_arrays) :
 

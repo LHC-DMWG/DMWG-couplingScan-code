@@ -67,7 +67,7 @@ rescaleA1 = Rescaler(scan3)
 # Everything other than hadron level rescaling should be able to take a range I guess.
 # Hadron level should return an error saying just do one and then use another method 
 # from there, can I recommend propagator rescaling.
-scalefactors_A2 = rescaleA1.rescale_by_br_quarks(target_gq=0.1,target_gdm=1,target_gl=0.01,model='axial')
-
+#scalefactors_A2 = rescaleA1.rescale_by_br_quarks(target_gq=0.1,target_gdm=1,target_gl=0.01,model='axial')
 
 # And let's try a more complicated one.
+scalefactors_several = rescaleA1.rescale_by_br_quarks(target_gq=[0.25, 0.2],target_gdm=1,target_gl=[0.05, 0.1],model='axial')
