@@ -71,8 +71,6 @@ def get_lhapdf_includes() :
 def get_extmodules() :
 
     # Check if we are actually compiling the C++ code.
-    print("My SYS ARGV is:")
-    print(sys.argv)
     if "--nolhapdf" in sys.argv :
         ext_modules = []
     else :
