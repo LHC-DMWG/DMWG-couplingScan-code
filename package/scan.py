@@ -8,6 +8,7 @@ import scipy.integrate as integrate
 # Check if lhapdf was available at compile time. 
 try:
     imp.find_module('lhapdfwrap')
+    print("Checked for and found lhapdfwrap module.")
     hasLHAPDF = True
 except:
     hasLHAPDF = False
