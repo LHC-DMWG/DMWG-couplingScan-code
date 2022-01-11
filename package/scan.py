@@ -7,7 +7,7 @@ import scipy.integrate as integrate
 
 # Check if lhapdf was available at compile time. 
 try:
-    imp.find_module('package')
+    imp.find_module('lhapdfwrap')
     hasLHAPDF = True
 except:
     hasLHAPDF = False
@@ -330,8 +330,12 @@ class DMVectorModelScan(DMModelScan):
 
     def hadron_level_xsec_monox_relative(self) :
         '''
-        (Relative) hadron-level cross section for vector mediator to DM
-        '''        
+        (Relative) hadron-level cross section for vector mediator to DM.
+        You can only use this function if you have LHAPDF installed.
+        '''
+        if not self._wrapper :
+            raise SystemExit("""You do not have LHAPDF installed! You cannot use this function.""")
+
         gamma = self.mediator_total_width()
         xsecs = []
         for mmed_i, mdm_i, gamma_i in zip(self.mmed, self.mdm, gamma) :
@@ -347,8 +351,14 @@ class DMVectorModelScan(DMModelScan):
     # In case of future relevance: parton level relative xsec
     def parton_level_xsec_monox_relative(self) :
         '''
-        (Relative) parton-level cross section for vector mediator to DM
+        (Relative) parton-level cross section for vector mediator to DM.
+        You can only use this function if you have LHAPDF installed.
+        True, it does not depend on LHAPDF, but it does depend on compiled
+        C++ code which was not created without LHAPDF in your install.
         ''' 
+        if not self._wrapper :
+            raise SystemExit("""You do not have LHAPDF installed! You cannot use this function.""")
+
         gamma = self.mediator_total_width()
 
         # Integrate is adaptive and fundamentally
@@ -453,6 +463,9 @@ class DMAxialModelScan(DMModelScan):
         '''
         (Relative) hadron-level cross section for axial-vector mediator to DM
         '''        
+        if not self._wrapper :
+            raise SystemExit("""You do not have LHAPDF installed! You cannot use this function.""")
+
         gamma = self.mediator_total_width()
         xsecs = []
         for mmed_i, mdm_i, gamma_i in zip(self.mmed, self.mdm, gamma) :
@@ -469,6 +482,9 @@ class DMAxialModelScan(DMModelScan):
         '''
         (Relative) parton-level cross section for axial-vector mediator to DM
         ''' 
+        if not self._wrapper :
+            raise SystemExit("""You do not have LHAPDF installed! You cannot use this function.""")
+
         gamma = self.mediator_total_width()
 
         # Integrate is adaptive and fundamentally

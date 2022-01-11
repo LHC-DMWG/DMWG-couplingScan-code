@@ -61,7 +61,8 @@ def get_lhapdf_includes() :
             libdir = ""
             incdir = ""
         else :
-            raise SystemExit("""You do not have lhapdf installed!
+            raise SystemExit("""
+                        You do not have lhapdf installed!
                         This will limit what you can do.
                         If you want to proceed anyway, re-install with option --nolhapdf""")
 
