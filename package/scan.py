@@ -8,7 +8,6 @@ import scipy.integrate as integrate
 # Check if lhapdf was available at compile time. 
 try:
     imp.find_module('lhapdfwrap')
-    print("Checked for and found lhapdfwrap module.")
     hasLHAPDF = True
 except:
     hasLHAPDF = False
@@ -186,23 +185,18 @@ class DMScalarModelScan(DMModelScan):
         v = 246
         for mq in Quarks:
             yq = np.sqrt(2) * mq.value / v
-            iwidth = np.piecewise(
-                self.mmed,
-                mq.value < self.mmed * 0.5,
-                [lambda x : 3 * self.gq**2 * yq**2 * x / (16 * PI) * beta(mq.value, x)**3, 0]
-            )
+            iwidth = np.select([self.mmed < 2*mq.value, self.mmed >= 2*mq.value],
+                [0, 3 * self.gq**2 * yq**2 * self.mmed / (16 * PI) * beta(mq.value, self.mmed)**3],
+                default=np.nan)            
 
             width += iwidth
 
         return width
 
     def mediator_partial_width_dm(self):
-        width = np.piecewise(
-            self.mmed,
-            self.mdm < self.mmed * 0.5,
-            [lambda x : self.gdm **2 * x / (8 * PI) * beta(self.mdm, x) ** 3, 0]
-
-        )
+        iwidth = np.select([self.mmed < 2*self.mdm, self.mmed >= 2*self.mdm],
+            [0, self.gdm **2 * self.mmed / (8 * PI) * beta(self.mdm, self.mmed) ** 3],
+            default=np.nan)  
         return width
     
     def mediator_partial_width_gluon(self):
@@ -232,22 +226,17 @@ class DMPseudoModelScan(DMModelScan):
         v = 246
         for mq in Quarks:
             yq = np.sqrt(2) * mq.value / v
-            iwidth = np.piecewise(
-                self.mmed,
-                mq.value < self.mmed * 0.5,
-                [lambda x : 3 * self.gq**2 * yq**2 * x / (16 * PI) * beta(mq.value, x), 0]
-            )
+            iwidth = np.select([self.mmed < 2*mq.value, self.mmed >= 2*mq.value],
+                [0, 3 * self.gq**2 * yq**2 * self.mmed / (16 * PI) * beta(mq.value, self.mmed)],
+                default=np.nan)            
             width += iwidth
 
         return width
 
     def mediator_partial_width_dm(self):
-        width = np.piecewise(
-            self.mmed,
-            self.mdm < self.mmed * 0.5,
-            [lambda x : self.gdm **2 * x / (8 * PI) * beta(self.mdm, x), 0]
-        )
-        
+        iwidth = np.select([self.mmed < 2*self.mdm, self.mmed >= 2*self.mdm],
+            [0, 3 * self.gq**2 * yq**2 * self.mmed / (16 * PI) * beta(mq.value, self.mmed)],
+            default=np.nan)
         return width
     
     def mediator_partial_width_gluon(self):
@@ -280,11 +269,9 @@ class DMVectorModelScan(DMModelScan):
         width = 0
         for mq in Quarks:
             # Only calculate when mq < 0.5 mmed, or we get errors.
-            iwidth = np.piecewise(
-                self.mmed,
-                [mq.value < self.mmed * 0.5],
-                [lambda x : 3 * self.gq**2 * x / (12 * PI) * alpha(mq.value, x) * beta(mq.value, x), 0]
-            )
+            iwidth = np.select([self.mmed < 2*mq.value, self.mmed >= 2*mq.value],
+                [0, 3 * self.gq**2 * self.mmed / (12 * PI) * alpha(mq.value, self.mmed) * beta(mq.value, self.mmed)],
+                default=np.nan)
             width += iwidth
 
         return width
@@ -293,11 +280,9 @@ class DMVectorModelScan(DMModelScan):
         '''
         On-shell width for mediator -> DM DM.
         '''
-        width = np.piecewise(
-            self.mmed,
-            [self.mdm < self.mmed * 0.5],
-            [lambda x : self.gdm**2 * x / (12 * PI) * alpha(self.mdm, x) * beta(self.mdm, x), 0]
-        )
+        width = np.select([self.mmed < 2*self.mdm, self.mmed >= 2*self.mdm],
+                [0, self.gdm**2 * self.mmed / (12 * PI) * alpha(self.mdm, self.mmed) * beta(self.mdm, self.mmed)],
+                default=np.nan)
         return width
 
     def mediator_partial_width_leptons(self):
@@ -310,12 +295,9 @@ class DMVectorModelScan(DMModelScan):
         # Charged leptons
         for ml in Leptons:
             # Only add width for ml < mmed
-            iwidth = np.piecewise(
-                self.mmed,
-                [ml.value < self.mmed * 0.5],
-                [lambda x : self.gl**2 * x / (12*PI) * alpha(ml.value, x) * beta(ml.value, x),0]
-            )
-            
+            iwidth = np.select([self.mmed < 2*ml.value, self.mmed >= 2*ml.value],
+                [0, self.gl**2 * self.mmed / (12*PI) * alpha(ml.value, self.mmed) * beta(ml.value, self.mmed)],
+                default=np.nan)            
             width += iwidth
 
         return width
@@ -406,11 +388,9 @@ class DMAxialModelScan(DMModelScan):
         '''
         On-shell width for mediator -> DM DM.
         '''
-        width = np.piecewise(
-            self.mmed,
-            [self.mdm < self.mmed * 0.5],        
-            [lambda x : self.gdm**2 * x / (12 * PI) * beta(self.mdm, x)**3, 0]
-        )
+        width = np.select([self.mmed < 2*self.mdm, self.mmed >= 2*self.mdm],
+            [0,self.gdm**2 * self.mmed / (12 * PI) * beta(self.mdm, self.mmed)**3],
+            default=np.nan)
 
         return width
 
@@ -424,11 +404,9 @@ class DMAxialModelScan(DMModelScan):
         # Charged leptons
         for ml in Leptons:
            # Only add width for ml < mmed
-            iwidth = np.piecewise(
-                self.mmed,
-                [ml.value < self.mmed * 0.5],     
-                [lambda x : self.gl**2 * x / (12*PI) * beta(ml.value, x)**3, 0]
-            )
+            iwidth = np.select([self.mmed < 2*ml.value, self.mmed >= 2*ml.value],
+                [0,self.gl**2 * self.mmed / (12*PI) * beta(ml.value, self.mmed)**3],
+                default=np.nan)
             
             width += iwidth
 

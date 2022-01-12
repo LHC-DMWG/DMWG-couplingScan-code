@@ -84,22 +84,14 @@ class Rescaler():
         n_couplings = np.size(target_arrays,1)
         n_masspoints = np.size(self.reference_scan.mmed)
         target_mmed = np.tile(self.reference_scan.mmed, n_couplings)
-        print("target_mmed:",target_mmed)
         target_mdm = np.tile(self.reference_scan.mdm, n_couplings)
-        print("target_mdm:",target_mdm)
         target_couplings = np.repeat(target_arrays,n_masspoints,axis=1)
-        print("Full coupling grid:",target_couplings)
 
         # Now create the appropriate scan.
-        print(np.size(target_mmed))
-        print(np.size(target_mdm))
-        print(np.size(target_couplings[0]))
-        print(np.size(target_couplings[1]))
-        print(np.size(target_couplings[2]))
         if target_ID == 'axial' : 
             target_scan = DMAxialModelScan(mmed=target_mmed, mdm=target_mdm, gq=target_couplings[0],
                 gdm=target_couplings[1], gl=target_couplings[2])
-        # case target_ID is 'vector' :
+        # TODO case target_ID is 'vector' :
 
         return target_scan
 
@@ -133,6 +125,9 @@ class Rescaler():
         # Calculate scale factor at each point.
         reference_factor = self.reference_scan.mediator_partial_width_quarks() ** 2 / self.reference_scan.mediator_total_width()
         target_factor = target_scan.mediator_partial_width_quarks() ** 2 / target_scan.mediator_total_width()
+        print(reference_factor)
+        print(target_factor)
+        # TODO: need to do this by coupling. Reshape reference factors to be one row per coupling?
         scale_factor = target_factor / reference_factor
 
         return format_output(scale_factor,target_arrays)
