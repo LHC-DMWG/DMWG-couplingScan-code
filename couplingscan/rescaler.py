@@ -1,13 +1,10 @@
 import numpy as np
-from package.scan import *
+from couplingscan.scan import *
 
 # Each rescaler has a reference scan against which the others are scaled.
 class Rescaler():
     # Class that houses rescaling operations
     # All methods return a multiplicative factor used to rescale signal cross sections
-    # TODO: decide if we should include the observed limits in here, thereby
-    # returning the final scaled values,
-    # or not include them and just return scale factors.
 
     def __init__(self, reference_scan) :
         self.reference_scan = reference_scan
@@ -84,34 +81,36 @@ class Rescaler():
         n_couplings = np.size(target_arrays,1)
         n_masspoints = np.size(self.reference_scan.mmed)
         target_mmed = np.tile(self.reference_scan.mmed, n_couplings)
-        print("target_mmed:",target_mmed)
         target_mdm = np.tile(self.reference_scan.mdm, n_couplings)
-        print("target_mdm:",target_mdm)
         target_couplings = np.repeat(target_arrays,n_masspoints,axis=1)
-        print("Full coupling grid:",target_couplings)
 
         # Now create the appropriate scan.
-        print(np.size(target_mmed))
-        print(np.size(target_mdm))
-        print(np.size(target_couplings[0]))
-        print(np.size(target_couplings[1]))
-        print(np.size(target_couplings[2]))
         if target_ID == 'axial' : 
             target_scan = DMAxialModelScan(mmed=target_mmed, mdm=target_mdm, gq=target_couplings[0],
                 gdm=target_couplings[1], gl=target_couplings[2])
-        # case target_ID is 'vector' :
+        elif target_ID == 'vector' :
+            target_scan = DMVectorModelScan(mmed=target_mmed, mdm=target_mdm, gq=target_couplings[0],
+                gdm=target_couplings[1], gl=target_couplings[2])
+        elif target_ID == 'scalar' :
+            target_scan = DMScalarModelScan(mmed=target_mmed, mdm=target_mdm, gq=target_couplings[0],
+                gdm=target_couplings[1], gl=target_couplings[2])
+        elif target_ID == 'pseudoscalar' :
+            target_scan = DMPseudoModelScan(mmed=target_mmed, mdm=target_mdm, gq=target_couplings[0],
+                gdm=target_couplings[1], gl=target_couplings[2])
+        else :
+            print("Unrecognized target model!")
+            exit(1)
 
         return target_scan
 
-    def format_output(self, scale_factor, target_arrays) :
+    def format_output(self, scale_factors, target_arrays) :
 
-        # Squish output down to a manageable format?
-        # Return whole scan and let user figure it out?
-        # Think I want: {tuple of couplings : [scale factor per mass point]}
+        # Squish output down to a manageable format.
+        # Return: {tuple of couplings : [scale factor per mass point]}
         output_dict = {}
-        unique_couplings = set(zip(target_arrays))
-        for i, gq, gdm, gl in enumerate(unique_couplings) :
-            output_dict[(gq, gdm, gl)] = [] # how to get this efficiently? 
+        for i in range(np.shape(target_arrays)[1]) :
+            gq, gdm, gl = target_arrays[:,i]
+            output_dict[(gq, gdm, gl)] = scale_factors[i]
 
         return output_dict
 
@@ -132,10 +131,14 @@ class Rescaler():
 
         # Calculate scale factor at each point.
         reference_factor = self.reference_scan.mediator_partial_width_quarks() ** 2 / self.reference_scan.mediator_total_width()
-        target_factor = target_scan.mediator_partial_width_quarks() ** 2 / target_scan.mediator_total_width()
-        scale_factor = target_factor / reference_factor
+        target_factors_1d = target_scan.mediator_partial_width_quarks() ** 2 / target_scan.mediator_total_width()
 
-        return format_output(scale_factor,target_arrays)
+        # Reshape to have one row per coupling
+        target_factors = np.reshape(target_factors_1d,(np.size(target_arrays,1),-1))       
+        # Now this is also broadcastable
+        scale_factors = target_factors / reference_factor
+
+        return self.format_output(scale_factors,target_arrays)
 
     def rescale_by_br_leptons(self, target_gq, target_gdm, target_gl,model=None):
         '''Rescale according to gq^2 * BR(med->DM DM). All possible
@@ -154,11 +157,15 @@ class Rescaler():
 
         # Calculate scale factor at each point.
         reference_factor = self.reference_scan.mediator_partial_width_quarks() * self.reference_scan.mediator_partial_width_leptons() / self.reference_scan.mediator_total_width()
-        target_factor = target_scan.mediator_partial_width_quarks() * target_scan.mediator_partial_width_leptons() / target_scan.mediator_total_width()
+        target_factors_1d = target_scan.mediator_partial_width_quarks() * target_scan.mediator_partial_width_leptons() / target_scan.mediator_total_width()
+
+        # Reshape to have one row per coupling
+        target_factors = np.reshape(target_factors_1d,(np.size(target_arrays,1),-1))       
+        # Now this is also broadcastable        
         scale_factor = target_factor / reference_factor
 
         # Return nicely formatted results
-        return format_output(scale_factor,target_arrays)
+        return format_output(scale_factors,target_arrays)
 
     def rescale_by_propagator(self,target_gq, target_gdm, target_gl, model=None):
         # Check that this method of rescaling makes sense for the
@@ -173,11 +180,15 @@ class Rescaler():
         
         # Calculate scale factor at each point
         reference_factor = self.reference_scan.propagator_relative()
-        target_factor = target_scan.propagator_relative()
-        scale_factor = target_factor / reference_factor        
+        target_factors_1d = target_scan.propagator_relative()
+
+        # Reshape to have one row per coupling
+        target_factors = np.reshape(target_factors_1d,(np.size(target_arrays,1),-1))       
+        # Now this is also broadcastable        
+        scale_factors = target_factor / reference_factor        
         
         # Return nicely formatted results
-        return format_output(scale_factor,target_arrays)
+        return format_output(scale_factors,target_arrays)
 
     def rescale_by_hadronic_xsec_monox():
         '''Rescale using hadronic-level cross sections.'''
@@ -201,11 +212,15 @@ class Rescaler():
         
         # Calculate scale factor at each point
         reference_factor = self.reference_scan.hadron_level_xsec_monox_relative()
-        target_factor = target_scan.hadron_level_xsec_monox_relative()
-        scale_factor = target_factor / reference_factor        
+        target_factors = target_scan.hadron_level_xsec_monox_relative()
+
+        # Reshape to have one row per coupling
+        target_factors = np.reshape(target_factors_1d,(np.size(target_arrays,1),-1))       
+        # Now this is also broadcastable        
+        scale_factors = target_factors / reference_factor        
         
         # Return nicely formatted results
-        return format_output(scale_factor,target_arrays)
+        return format_output(scale_factors,target_arrays)
 
     def rescale_by_parton_level_xsec_monox():
         '''Rescale using parton-level cross sections.'''
@@ -225,8 +240,12 @@ class Rescaler():
         
         # Calculate scale factor at each point
         reference_factor = self.reference_scan.hadron_level_xsec_monox_relative()
-        target_factor = target_scan.hadron_level_xsec_monox_relative()
-        scale_factor = target_factor / reference_factor        
+        target_factors_1d = target_scan.hadron_level_xsec_monox_relative()
+
+        # Reshape to have one row per coupling
+        target_factors = np.reshape(target_factors_1d,(np.size(target_arrays,1),-1))       
+        # Now this is also broadcastable        
+        scale_factors = target_factors / reference_factor        
         
         # Return nicely formatted results
-        return format_output(scale_factor,target_arrays)
+        return format_output(scale_factors,target_arrays)
