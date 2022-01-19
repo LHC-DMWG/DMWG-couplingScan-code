@@ -89,7 +89,7 @@ def get_extmodules() :
     return ext_modules
 
 setup(
-    name = 'package',
+    name = 'couplingscan',
     version=__version__,
     url = 'https://github.com/LHC-DMWG/DMWG-couplingScan-code/',
     author = 'LHC DMWG',

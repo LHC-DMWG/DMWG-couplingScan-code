@@ -1,5 +1,5 @@
-from package.scan import *
-from package.rescaler import *
+from couplingscan.scan import *
+from couplingscan.rescaler import *
 
 # Example one: mostly constant parameters, scan in 1d
 # numpy broadcasting does its magic

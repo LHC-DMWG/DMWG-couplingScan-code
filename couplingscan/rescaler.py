@@ -1,5 +1,5 @@
 import numpy as np
-from package.scan import *
+from couplingscan.scan import *
 
 # Each rescaler has a reference scan against which the others are scaled.
 class Rescaler():
