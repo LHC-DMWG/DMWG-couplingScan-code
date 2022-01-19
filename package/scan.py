@@ -38,8 +38,15 @@ def beta(x, y):
     """
     Convenience function that implements part of the width formulae.
     """
-    # Not sure why these are here?
-    return np.sqrt(1 - 4 * x**2 / y**2)
+    # Annoying - this shouldn't have to be complex
+    # but because select doesn't lazy evaluate, this will
+    # get rid of the occasional error when it tries to calculate beta
+    # for cases that are ultimately discarded
+    # First is sometimes a float, sometimes an array.
+    if (type(x) is np.ndarray) : xc = x.astype(complex)
+    else : xc = complex(x,0)
+    yc = y.astype(complex)
+    return np.real(np.sqrt(1 - 4 * xc**2 / yc**2))
 
 @dataclass
 class DMModelScan(abc.ABC):
@@ -85,13 +92,13 @@ class DMModelScan(abc.ABC):
                 setattr(self,attr,attrval.astype(float))
 
         # Check that the arrays we have been given match in shape where necessary.
-        if self.mmed.shape != self.mdm.shape :
+        if (self.mmed.shape != self.mdm.shape) and not (len(self.mmed)==1 or len(self.mdm)==1) :
             print("Error: mass points have mismatching shapes!")
             print("These are meant to be matching x and y values. Please fix.")
             exit(1)
         if not (self.gq.shape == self.gdm.shape == self.gl.shape) :
             print("Error: coupling points have mismatching shapes!")
-            print("Each point in your scan must have exactly one gq, gdm, and gl.")
+            print("Each point in your reference scan must have exactly one gq, gdm, and gl.")
             exit(1)
         # Only need to check one of these now because we know they match
         if not (len(self.gq) == 1 or len(self.gq) == len(self.mmed)) :
@@ -128,9 +135,6 @@ class DMModelScan(abc.ABC):
     # @abc.abstractmethod
     # def parton_level_xsec_monox_relative(self) :
     #     pass
-
-    # TODO:
-    # Add for resonances!
 
     # Next four functions used by both vector and axial-vector, so put them here
 
@@ -189,15 +193,15 @@ class DMScalarModelScan(DMModelScan):
                 [0, 3 * self.gq**2 * yq**2 * self.mmed / (16 * PI) * beta(mq.value, self.mmed)**3],
                 default=np.nan)            
 
-            width += iwidth
+            width += iwidth      
 
-        return width
+        return width      
 
     def mediator_partial_width_dm(self):
-        iwidth = np.select([self.mmed < 2*self.mdm, self.mmed >= 2*self.mdm],
-            [0, self.gdm **2 * self.mmed / (8 * PI) * beta(self.mdm, self.mmed) ** 3],
+        width = np.select([self.mmed < 2*self.mdm, self.mmed >= 2*self.mdm],
+            [0, self.gdm**2 * self.mmed / (8 * PI) * beta(self.mdm, self.mmed) ** 3],
             default=np.nan)  
-        return width
+        return width      
     
     def mediator_partial_width_gluon(self):
         alphas = 0.130
@@ -206,8 +210,8 @@ class DMScalarModelScan(DMModelScan):
         width = width * np.abs(self.fs(4 * (Quarks.top.value / self.mmed)**2))**2
         return width
 
-    def fs(self,tau):
-        tau = np.complex(tau,0)
+    def fs(self,simple):
+        tau = simple.astype(complex)
         return tau * (1 + (1 - tau) * (np.arctan(1. / np.sqrt(tau - 1)))**2)
         
 @dataclass
@@ -234,8 +238,8 @@ class DMPseudoModelScan(DMModelScan):
         return width
 
     def mediator_partial_width_dm(self):
-        iwidth = np.select([self.mmed < 2*self.mdm, self.mmed >= 2*self.mdm],
-            [0, 3 * self.gq**2 * yq**2 * self.mmed / (16 * PI) * beta(mq.value, self.mmed)],
+        width = np.select([self.mmed < 2*self.mdm, self.mmed >= 2*self.mdm],
+            [0, self.gdm **2 * self.mmed / (8 * PI) * beta(self.mdm, self.mmed)],
             default=np.nan)
         return width
     
@@ -246,8 +250,9 @@ class DMPseudoModelScan(DMModelScan):
         width = width * np.abs(self.fps(4 * (Quarks.top.value / self.mmed)**2))**2
         return width
 
-    def fps(self,tau):
-        tau = np.complex(tau,0)
+    # These need to be complex valued
+    def fps(self,simple):
+        tau = simple.astype(complex)
         return tau * (np.arctan(1. / np.sqrt(tau - 1)))**2
 
 @dataclass
