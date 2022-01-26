@@ -153,7 +153,7 @@ class Rescaler():
         # Create a target scan that has the enormous dimensionality required
         # to broadcast across the full set of scanned values
         target_arrays = self.create_target_arrays(target_gq, target_gdm, target_gl)
-        target_scan = self.create_target_scan(target_ID, target_arrays)
+        target_scan = self.create_target_scan(model, target_arrays)
 
         # Calculate scale factor at each point.
         reference_factor = self.reference_scan.mediator_partial_width_quarks() * self.reference_scan.mediator_partial_width_leptons() / self.reference_scan.mediator_total_width()
@@ -162,10 +162,10 @@ class Rescaler():
         # Reshape to have one row per coupling
         target_factors = np.reshape(target_factors_1d,(np.size(target_arrays,1),-1))       
         # Now this is also broadcastable        
-        scale_factor = target_factor / reference_factor
+        scale_factor = target_factors / reference_factor
 
         # Return nicely formatted results
-        return format_output(scale_factors,target_arrays)
+        return self.format_output(scale_factors,target_arrays)
 
     def rescale_by_propagator(self,target_gq, target_gdm, target_gl, model=None):
         # Check that this method of rescaling makes sense for the
@@ -176,7 +176,7 @@ class Rescaler():
         # Create a target scan that has the dimensionality required
         # to broadcast across the full set of scanned values
         target_arrays = self.create_target_arrays(target_gq, target_gdm, target_gl)
-        target_scan = self.create_target_scan(target_ID, target_arrays)        
+        target_scan = self.create_target_scan(model, target_arrays)        
         
         # Calculate scale factor at each point
         reference_factor = self.reference_scan.propagator_relative()
@@ -185,19 +185,24 @@ class Rescaler():
         # Reshape to have one row per coupling
         target_factors = np.reshape(target_factors_1d,(np.size(target_arrays,1),-1))       
         # Now this is also broadcastable        
-        scale_factors = target_factor / reference_factor        
+        scale_factors = target_factors / reference_factor        
         
         # Return nicely formatted results
-        return format_output(scale_factors,target_arrays)
+        return self.format_output(scale_factors,target_arrays)
 
-    def rescale_by_hadronic_xsec_monox():
+    def rescale_by_hadronic_xsec_monox(self,target_gq, target_gdm, target_gl, model=None):
         '''Rescale using hadronic-level cross sections.'''
 
         # Check that this method of rescaling makes sense for the
         # target and reference scan types:
         if not model : model = self.reference_scan._coupling
-        self.check_models_methods("propagator",model)
+        self.check_models_methods("hadron-level",model)
 
+        # Create a target scan that has the dimensionality required
+        # to broadcast across the full set of scanned values
+        target_arrays = self.create_target_arrays(target_gq, target_gdm, target_gl)
+        target_scan = self.create_target_scan(model, target_arrays)        
+        
         for this_array in target_arrays :
             if (this_array == np.ndarray and len(this_array) > 1) :
                 print("""Warning: the hadronic rescaling method takes a long time!
@@ -205,14 +210,9 @@ class Rescaler():
                 Instead, try rescaling to a single target and then using the propagator scaling method
                 to arrive at additional scenarios.""")
 
-        # Create a target scan that has the dimensionality required
-        # to broadcast across the full set of scanned values
-        target_arrays = self.create_target_arrays(target_gq, target_gdm, target_gl)
-        target_scan = self.create_target_scan(target_ID, target_arrays)        
-        
         # Calculate scale factor at each point
         reference_factor = self.reference_scan.hadron_level_xsec_monox_relative()
-        target_factors = target_scan.hadron_level_xsec_monox_relative()
+        target_factors_1d = target_scan.hadron_level_xsec_monox_relative()
 
         # Reshape to have one row per coupling
         target_factors = np.reshape(target_factors_1d,(np.size(target_arrays,1),-1))       
@@ -220,23 +220,23 @@ class Rescaler():
         scale_factors = target_factors / reference_factor        
         
         # Return nicely formatted results
-        return format_output(scale_factors,target_arrays)
+        return self.format_output(scale_factors,target_arrays)
 
-    def rescale_by_parton_level_xsec_monox():
+    def rescale_by_parton_level_xsec_monox(self,target_gq, target_gdm, target_gl, model=None):
         '''Rescale using parton-level cross sections.'''
 
         print('''Warning: the parton-level cross section is not the best-performing rescaling method
-        in any scenario. Consider using something else!''')
+        in any hadron collider scenario. Consider using something else!''')
 
         # Check that this method of rescaling makes sense for the
         # target and reference scan types:
         if not model : model = self.reference_scan._coupling
-        self.check_models_methods("propagator",model)
+        self.check_models_methods("parton-level",model)
 
         # Create a target scan that has the dimensionality required
         # to broadcast across the full set of scanned values
         target_arrays = self.create_target_arrays(target_gq, target_gdm, target_gl)
-        target_scan = self.create_target_scan(target_ID, target_arrays)        
+        target_scan = self.create_target_scan(model, target_arrays)        
         
         # Calculate scale factor at each point
         reference_factor = self.reference_scan.hadron_level_xsec_monox_relative()
@@ -248,4 +248,4 @@ class Rescaler():
         scale_factors = target_factors / reference_factor        
         
         # Return nicely formatted results
-        return format_output(scale_factors,target_arrays)
+        return self.format_output(scale_factors,target_arrays)

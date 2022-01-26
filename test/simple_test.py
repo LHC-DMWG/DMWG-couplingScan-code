@@ -54,7 +54,7 @@ print(scan3.parton_level_xsec_monox_relative())
 
 #Example 3.3: hadron-level
 print("Hadron level:")
-print(scan3.hadron_level_xsec_monox_relative())
+#print(scan3.hadron_level_xsec_monox_relative())
 
 # Example four: same tests but for axial-vector
 scan4 = DMAxialModelScan(mmed=3*np.array([1,10,50,100,150,200,250,300,350,400,450]),
@@ -73,7 +73,7 @@ print(scan4.parton_level_xsec_monox_relative())
 # Example 4.3: hadron-level
 # Slow, so comment out if you want faster tests.
 print("Hadron level:")
-print(scan4.hadron_level_xsec_monox_relative())
+#print(scan4.hadron_level_xsec_monox_relative())
 
 # Now let's try a rescaler.
 rescaleA1 = Rescaler(scan4)
@@ -86,3 +86,8 @@ print("Simple scale factors:")
 scalefactors_several = rescaleA1.rescale_by_br_quarks(target_gq=[0.25, 0.2],target_gdm=1,target_gl=[0.0, 0.05, 0.1],model='axial')
 print("Mulitdimensional scale factors:")
 print(scalefactors_several)
+
+# A1 to V1
+scalefactors_V1 = rescaleA1.rescale_by_hadronic_xsec_monox(target_gq=0.1,target_gdm=1,target_gl=0.01,model='vector')
+print("Hadronic A1 to V1")
+print(scalefactors_V1)
