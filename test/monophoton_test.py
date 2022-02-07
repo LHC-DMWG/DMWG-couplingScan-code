@@ -44,10 +44,9 @@ def make_plot(xvals, yvals, zvals, this_tag, addText=None, addCurves=None, addPo
 
   levels = range(26)  # Levels must be increasing.
   fig,ax=plt.subplots(1,1)
-  #plt.xlim(0, 2600)
-  plt.xlim(0, 1250)
-  #plt.ylim(0, 1100)
+  plt.xlim(0, 1200)
   plt.ylim(0, 500)
+  plt.rc('font',size=17)
   ratio = get_aspect_ratio(ax)
   ax.set_aspect(ratio)
   cp = ax.tricontourf(xvals, yvals, zvals, levels=levels, cmap='Blues_r')
@@ -83,7 +82,8 @@ def make_plot(xvals, yvals, zvals, this_tag, addText=None, addCurves=None, addPo
 
   # Add text
   if addText :
-    plt.figtext(0.2,0.75,addText,backgroundcolor="white")
+    plt.figtext(0.2,0.75,addText,size=14)
+    #plt.figtext(0.2,0.75,addText,backgroundcolor="white",size=14)
 
   plt.savefig('plots/{0}_{1}.eps'.format(analysis_tag,this_tag),bbox_inches='tight')
   plt.savefig('plots/{0}_{1}.pdf'.format(analysis_tag,this_tag),bbox_inches='tight')
