@@ -12,7 +12,7 @@ class DMVisibleLimit1D(abc.ABC):
     mdm: float
     gdm: float
     gl: float
-    #gq: float
+    coupling : str
 
     def __post_init__(self):
 
@@ -41,6 +41,10 @@ class DMVisibleLimit1D(abc.ABC):
                 and the other coupling to SM must be a single fixed value.""")
             print("The mediator and coupling limit points are meant to be matching x and y values. Please fix.")
             exit(1)
+        
+        if ('axial' not in self.coupling and 'vector' not in self.coupling) :
+            print("This is only defined for axial or vector couplings!")
+            exit(1)            
 
     @abc.abstractmethod
     def extract_exclusion_depths(self) :
@@ -48,7 +52,7 @@ class DMVisibleLimit1D(abc.ABC):
 
 
 @dataclass
-class DMLimit1D_AxialDijet(DMVisibleLimit1D) :
+class DMLimit1D_Dijet(DMVisibleLimit1D) :
 
     def __post_init__(self):
         gq: -1
@@ -63,19 +67,31 @@ class DMLimit1D_AxialDijet(DMVisibleLimit1D) :
         xsec_scan = scan.mediator_partial_width_quarks()**2/scan.mediator_total_width()
 
         # These are limit gq values in the plot for each mediator mass of interest
-        interpolated_limit_gq = np.interp(scan.mmed,self.mmed, self.gq_limits)
+        # Any points in grid that are actually above or below analysis mmed
+        # values should never be excluded, so we give them a very large value.
+        interpolated_limit_gq = np.interp(scan.mmed,self.mmed, self.gq_limits,left=10.,right=10.)
 
         # These are gq': the equivalent gq in the world of the plot
-        plot_world = DMAxialModelScan(
-            mmed=scan.mmed,
-            mdm=self.mdm,
-            gq=1.0,
-            gdm=0.0,
-            gl=0.0,
-        )
+        if self.coupling == 'axial' :
+            plot_world = DMAxialModelScan(
+                mmed=scan.mmed,
+                mdm=self.mdm,
+                gq=1.0,
+                gdm=0.0,
+                gl=0.0,
+            )
+        else :
+            plot_world = DMVectorModelScan(
+                mmed=scan.mmed,
+                mdm=self.mdm,
+                gq=1.0,
+                gdm=0.0,
+                gl=0.0,
+            )
         plot_world_widths = plot_world.mediator_partial_width_quarks()
 
         exclusion_depth = interpolated_limit_gq**2 * plot_world_widths / xsec_scan
+
         return exclusion_depth
 
 
