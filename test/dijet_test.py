@@ -81,7 +81,7 @@ ylist = np.array([val["y"][0]["value"] for val in values]).astype(float)
 # in the cross section don't work out, or else in the same coupling scenario as what we're
 # trying to go to. Those are really the only options.
 # Need to tell the code that so it knows what to do.
-gq_limit = DMLimit1D_Dijet(
+gq_limit = CouplingLimit_Dijet(
     mmed=xlist,
     gq_limits=ylist,
     mdm=10000,
@@ -92,7 +92,8 @@ gq_limit = DMLimit1D_Dijet(
 
 # This is what we want to get our limits in: a scan in A1 scenario with plenty of points.
 target_xvals = np.linspace(200,3600,35)
-target_yvals = np.linspace(0,1700,18)
+target_yvals = np.linspace(0,1700,35)
+print(target_yvals)
 target_xgrid, target_ygrid = np.meshgrid(target_xvals,target_yvals)
 scan_A1 = DMAxialModelScan(
 mmed=target_xgrid.flatten(),
@@ -105,8 +106,29 @@ gl=0.0,
 values = gq_limit.extract_exclusion_depths(scan_A1)
 
 # Make a plot
-make_plot(scan_A1.mmed, scan_A1.mdm, values, analysis_tag, addText=None, addCurves=None, addPoints=True)
+make_plot(scan_A1.mmed, scan_A1.mdm, values, "A1", addText=None, addCurves=None, addPoints=True)
 
-# Get the other four scenarios by rescaling from our scan?
+# Get the other three scenarios by rescaling from our scan
+rescaleA1 = Rescaler(scan_A1)
+A2_sfs = rescaleA1.rescale_by_br_quarks(target_gq=0.1,target_gdm=1,target_gl=0.1,model='axial')[(0.1,1,0.1)]
+V_sfs = rescaleA1.rescale_by_br_quarks(target_gq=[0.1,0.25],target_gdm=1,target_gl=[0.0,0.01],model='vector')
+V1_sfs = V_sfs[(0.25,1.0,0.0)]
+V2_sfs = V_sfs[(0.1,1.0,0.01)]
+make_plot(scan_A1.mmed, scan_A1.mdm, values/A2_sfs, "A2_rescaled", addPoints = True)
+make_plot(scan_A1.mmed, scan_A1.mdm, values/V1_sfs, "V1_rescaled", addPoints = True)
+make_plot(scan_A1.mmed, scan_A1.mdm, values/V2_sfs, "V2_rescaled", addPoints = True)
 
-# Alternatively, create scan beginning from cross-section limit by just making gq limit (one line)
+# Now get the other three scenarios via the gq plot directly.
+# Confirm they are identical.
+scan_A2 = DMAxialModelScan(mmed=target_xgrid.flatten(), mdm=target_ygrid.flatten(), gq=0.1, gdm=1.0, gl=0.1)
+A2_direct = gq_limit.extract_exclusion_depths(scan_A2)
+scan_V1 = DMVectorModelScan(mmed=target_xgrid.flatten(), mdm=target_ygrid.flatten(), gq=0.25, gdm=1.0, gl=0.0)
+V1_direct = gq_limit.extract_exclusion_depths(scan_V1)
+scan_V2 = DMVectorModelScan(mmed=target_xgrid.flatten(), mdm=target_ygrid.flatten(), gq=0.1, gdm=1.0, gl=0.01)
+V2_direct = gq_limit.extract_exclusion_depths(scan_V2)
+make_plot(scan_A2.mmed, scan_A2.mdm, A2_direct, "A2_from1dlimit", addPoints = True)
+make_plot(scan_V1.mmed, scan_V1.mdm, V1_direct, "V1_from1dlimit", addPoints = True)
+make_plot(scan_V2.mmed, scan_V2.mdm, V2_direct, "V2_from1dlimit", addPoints = True)
+
+# Alternatively, create scan beginning from cross-section limit by just making gq limit (one line).
+# Code not ready at this point but we will make it available.

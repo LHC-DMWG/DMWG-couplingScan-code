@@ -162,7 +162,7 @@ class Rescaler():
         # Reshape to have one row per coupling
         target_factors = np.reshape(target_factors_1d,(np.size(target_arrays,1),-1))       
         # Now this is also broadcastable        
-        scale_factor = target_factors / reference_factor
+        scale_factors = target_factors / reference_factor
 
         # Return nicely formatted results
         return self.format_output(scale_factors,target_arrays)
