@@ -52,37 +52,41 @@ class CouplingLimit_Dijet(abc.ABC) :
         # Limit scenario is the one in which our input limit (and this class) is defined.
         # Scan scenario is the one we're going towards.
 
-        # Extract full cross sections for scan scenario.
+        # Extract full cross sections for target scan scenario.
         xsec_scan = scan.mediator_partial_width_quarks()**2/scan.mediator_total_width()
 
-        # These are limit gq values in the plot for each mediator mass of interest
-        # Any points in grid that are actually above or below analysis mmed
-        # values should never be excluded, so we give them a very large value.
-        interpolated_limit_gq = np.interp(scan.mmed,self.mmed, self.gq_limits,left=10.,right=10.)
-
-        # TODO: CAN I LEARN FROM DILEPTON EXPERIENCE TO MAKE THIS MORE ROBUST
-        # SO I CAN ACTUALLY HAVE GDM, GL DIFFERENT?
-
-        # These are gq': the equivalent gq in the world of the plot
+        # Create scan in world of input plot.
+        # Need a placeholder gq around which we interpret: pick 1.
         if self.coupling == 'axial' :
             plot_world = DMAxialModelScan(
                 mmed=scan.mmed,
                 mdm=self.mdm,
                 gq=1.0,
-                gdm=0.0,
-                gl=0.0,
+                gdm=self.gdm,
+                gl=self.gl,
             )
         else :
             plot_world = DMVectorModelScan(
                 mmed=scan.mmed,
                 mdm=self.mdm,
                 gq=1.0,
-                gdm=0.0,
-                gl=0.0,
+                gdm=self.gdm,
+                gl=self.gl,
             )
-        plot_world_widths = plot_world.mediator_partial_width_quarks()
 
-        exclusion_depth = interpolated_limit_gq**2 * plot_world_widths / xsec_scan
+        # Interpolate input gq limit curve to get all the mass points we need
+        # Any points in grid that are actually above or below analysis mmed
+        # values should never be excluded, so we give them a very large value        
+        interpolated_limit_gq = np.interp(scan.mmed, self.mmed, self.gq_limits,left=10.,right=10.)
+
+        # This math comes from the CMS original versions of the calculation, and works well, 
+        # but is limited to cases where gdm=0 and gl=0.
+        # plot_world_widths = plot_world.mediator_partial_width_quarks()
+        # exclusion_depth = interpolated_limit_gq**2 * plot_world_widths / xsec_scan
+
+        # This should be more general.
+        xsec_plot_world = plot_world.mediator_partial_width_quarks()**2/plot_world.mediator_total_width()
+        exclusion_depth = (xsec_plot_world/xsec_scan) * interpolated_limit_gq**2
 
         return exclusion_depth
 

@@ -1,6 +1,7 @@
 import json
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 from couplingscan.scan import *
 from couplingscan.rescaler import *
@@ -76,18 +77,14 @@ xlist = np.array([val["x"][0]["value"] for val in invalues]).astype(float)
 ylist = np.array([val["y"][0]["value"] for val in invalues]).astype(float)
 
 # Now create a 1d visible limit object with this, and extract our 2d limits from it.
-# This model is unclear re vector/axial-vector; let's try both and see if they differ.
-# It HAS TO BE leptophobic and decoupled from dark matter; otherwise the cancellations
-# in the cross section don't work out, or else in the same coupling scenario as what we're
-# trying to go to. Those are really the only options.
-# Need to tell the code that so it knows what to do.
+# This is based on what the settings are for the world in which the gq plot is made.
 gq_limit = CouplingLimit_Dijet(
     mmed=xlist,
     gq_limits=ylist,
     mdm=10000,
     gdm=0.0,
     gl=0.0,
-    coupling='axial'
+    coupling='vector'
 )
 
 # This is what we want to get our limits in: a scan in A1 scenario with plenty of points.
