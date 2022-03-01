@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from couplingscan.scan import *
 from couplingscan.rescaler import *
-from couplingscan.limit_1d import *
+from couplingscan.limitparsers import *
 
 # Analysing results from http://cms-results.web.cern.ch/cms-results/public-results/publications/EXO-16-056/
 
@@ -70,10 +70,10 @@ def make_plot(xvals, yvals, zvals, this_tag, addText=None, addCurves=None, addPo
 # Extract HEPData into useable format
 with open("dijet_hepdata/hepdata_gqplot_cms36ifb.json", "r") as read_file:
   data = json.load(read_file)
-values = data["values"]
+invalues = data["values"]
 # And convert to x-y numpy arrays
-xlist = np.array([val["x"][0]["value"] for val in values]).astype(float)
-ylist = np.array([val["y"][0]["value"] for val in values]).astype(float)
+xlist = np.array([val["x"][0]["value"] for val in invalues]).astype(float)
+ylist = np.array([val["y"][0]["value"] for val in invalues]).astype(float)
 
 # Now create a 1d visible limit object with this, and extract our 2d limits from it.
 # This model is unclear re vector/axial-vector; let's try both and see if they differ.
@@ -130,5 +130,47 @@ make_plot(scan_A2.mmed, scan_A2.mdm, A2_direct, "A2_from1dlimit", addPoints = Tr
 make_plot(scan_V1.mmed, scan_V1.mdm, V1_direct, "V1_from1dlimit", addPoints = True)
 make_plot(scan_V2.mmed, scan_V2.mdm, V2_direct, "V2_from1dlimit", addPoints = True)
 
-# Alternatively, create scan beginning from cross-section limit by just making gq limit (one line).
-# Code not ready at this point but we will make it available.
+# Alternatively, we can create scan beginning from cross-section limit by just making gq limit (one line).
+# We don't have public data that includes both an observed and theory curve though, so to demonstrate this
+# we have to make a theory line to use.
+
+# First let's convert the g_q plot to something like this so we have something to start from.
+# We know what the 1D observed limit is, so all we need to do is extract the theory curve.
+with open("dijet_hepdata/hepdata_couplinglimit_cms36ifb.json", "r") as read_file:
+  data = json.load(read_file)
+xsecvalues = data["values"]
+xlist_xsec = np.array([val["x"][0]["value"] for val in xsecvalues]).astype(float)
+ylist_xsec = np.array([val["y"][2]["value"] for val in xsecvalues]).astype(float)
+# Now: theory curve goes like gq2 so theory curve is just
+# gqth^2/gqlim^2*observed with all else the same and some fixed gqth.
+# Target model will be gq = 0.25, 0, 0 for a mediator mass of 10 TeV (decoupled mediator), vector mediator.
+gqlimit_interp = np.interp(xlist_xsec,xlist,ylist,left=10.,right=10.)
+theory_curve = ylist_xsec*(0.25**2/gqlimit_interp**2)
+# Plot to check it ...
+plt.clf()
+plt.plot(xlist_xsec,ylist_xsec)
+plt.plot(xlist_xsec,theory_curve)
+plt.xlim(500, 8000)
+plt.yscale('log')
+plt.ylim(1e-5, 1e5)
+plt.savefig('plots/validation/dijet_extract_theoryxsec.pdf',bbox_inches='tight')
+# And it looks fine. So we can proceed and use these two lines to create a dijet scan.
+
+# And set this as input for the new scan.
+xsec_limit = CrossSectionLimit_Dijet(
+  mmed_limit=xlist_xsec,
+  xsec_limit=ylist_xsec,
+  mmed_theory=xlist_xsec,
+  xsec_theory=theory_curve,
+  mdm=10000,
+  gq=0.25,
+  gdm=0.0,
+  gl=0.0,
+  coupling='vector',
+  max_intrinsic_width=0.15
+)
+
+# Now extract some limit plots and compare them to the ones using the original method.
+values_new = xsec_limit.extract_exclusion_depths(scan_A1)
+# And make a plot
+make_plot(scan_A1.mmed, scan_A1.mdm, values_new, "A1_fromxsec", addText=None, addCurves=None, addPoints=True)
