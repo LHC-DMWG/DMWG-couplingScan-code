@@ -21,6 +21,21 @@ or
 pip install git+https://github.com/LHC-DMWG/DMWG-couplingScan-code.git --install-option="--no-lhapdf"
 ```
 
+****
+
+
+## Install LHAPDF manually [another way of installation]
+
+After following the section "Quick start instructions" on https://lhapdf.hepforge.org/install.html, we have to download the data files and link the dynamical path and data path to the right place. i.e. after
+```make install```
+on LHAPDF instruction, do
+```
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/folder-contains-libLHAPDF.so
+wget http://lhapdfsets.web.cern.ch/lhapdfsets/current/NNPDF30_nlo_as_0118.tar.gz
+tar -xzvf NNPDF30_nlo_as_0118.tar.gz
+export LHAPDF_DATA_PATH=$LHAPDF_DATA_PATH:/path/to/folder-contains-NNPDF30_nlo_as_0118-folder
+```
+Now, do the below procedures to pip install all the relevant dependencies locally. Please do the installation in "dev mode" with lhapdf.
 
 ## Installation in development mode [instructions for Boyu and Josh]
 
