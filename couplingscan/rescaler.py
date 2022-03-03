@@ -239,8 +239,8 @@ class Rescaler():
         target_scan = self.create_target_scan(model, target_arrays)        
         
         # Calculate scale factor at each point
-        reference_factor = self.reference_scan.hadron_level_xsec_monox_relative()
-        target_factors_1d = target_scan.hadron_level_xsec_monox_relative()
+        reference_factor = self.reference_scan.parton_level_xsec_monox_relative()
+        target_factors_1d = target_scan.parton_level_xsec_monox_relative()
 
         # Reshape to have one row per coupling
         target_factors = np.reshape(target_factors_1d,(np.size(target_arrays,1),-1))       
