@@ -23,7 +23,7 @@ def make_plot(xvals, yvals, zvals, this_tag, addText=None, addCurves=None, addPo
 
   levels = range(26)  # Levels must be increasing.
   fig,ax=plt.subplots(1,1)
-  plt.xlim(0, 3500)
+  plt.xlim(500, 3500)
   plt.ylim(0, 1700)
   plt.rc('font',size=17)
   ratio = get_aspect_ratio(ax)
@@ -50,18 +50,17 @@ def make_plot(xvals, yvals, zvals, this_tag, addText=None, addCurves=None, addPo
   ax.set_xlabel("m$_{ZA}$ [GeV]")
   ax.set_ylabel("m$_{\chi}$ [GeV]")   
 
-  # Now add exclusion contour (if not doing official - harder to see with both)
-  if not addCurves :
-    ax.tricontour(xvals, yvals, zvals,levels=[1],colors=['w'],linewidths=[2])
+  # Now add exclusion contour
+  ax.tricontour(xvals, yvals, zvals,levels=[1],colors=['w'],linewidths=[2])
 
   # Now add another for comparison if desired.
   if addCurves :
     for curve in addCurves :
-      ax.add_patch(curve)
+      ax.add_line(curve)
 
   # Add text
   if addText :
-    plt.figtext(0.2,0.75,addText,size=14)
+    plt.figtext(0.2,0.75,addText,size=14,bbox=dict(facecolor='white', alpha=0.75))
     #plt.figtext(0.2,0.75,addText,backgroundcolor="white",size=14)
 
   plt.savefig('plots/{0}_{1}.eps'.format(analysis_tag,this_tag),bbox_inches='tight')
@@ -128,46 +127,72 @@ make_plot(scan_V1.mmed, scan_V1.mdm, V1_direct, "V1_from1dlimit", addPoints = Tr
 make_plot(scan_V2.mmed, scan_V2.mdm, V2_direct, "V2_from1dlimit", addPoints = True)
 
 # Alternatively, we can create scan beginning from cross-section limit by just making gq limit (one line).
-# We don't have public data that includes both an observed and theory curve though, so to demonstrate this
-# we have to make a theory line to use.
+# This is what we'll show in the paper example.
 
-# First let's convert the g_q plot to something like this so we have something to start from.
-# We know what the 1D observed limit is, so all we need to do is extract the theory curve.
-with open("dijet_hepdata/hepdata_couplinglimit_cms36ifb.json", "r") as read_file:
+# We don't have public data that includes both an observed and theory curve though, so theory curve was extracted
+# from fig 11a using WebPlotDigitizer
+xvals = []
+yvals = []
+with open("dijet_hepdata/approximate_theorycurve.txt","r") as read_file :
+  lines = read_file.readlines()
+  for line in lines :
+    tokens = line.split(", ")
+    xvals.append(float(tokens[0]))
+    yvals.append(float(tokens[1]))
+x_theory = np.array(xvals)
+y_theory = np.array(yvals)
+
+# Now get the 1D observed cross section limit for 11a.
+with open("dijet_hepdata/hepdata_crosssectionlimit_cms36ifb.json", "r") as read_file:
   data = json.load(read_file)
 xsecvalues = data["values"]
 xlist_xsec = np.array([val["x"][0]["value"] for val in xsecvalues]).astype(float)
 ylist_xsec = np.array([val["y"][2]["value"] for val in xsecvalues]).astype(float)
-# Now: theory curve goes like gq2 so theory curve is just
-# gqth^2/gqlim^2*observed with all else the same and some fixed gqth.
-# Target model will be gq = 0.25, 0, 0 for a mediator mass of 10 TeV (decoupled mediator), vector mediator.
-gqlimit_interp = np.interp(xlist_xsec,xlist,ylist,left=10.,right=10.)
-theory_curve = ylist_xsec*(0.25**2/gqlimit_interp**2)
+
 # Plot to check it ...
 plt.clf()
 plt.plot(xlist_xsec,ylist_xsec)
-plt.plot(xlist_xsec,theory_curve)
+plt.plot(x_theory, y_theory)
 plt.xlim(500, 8000)
 plt.yscale('log')
-plt.ylim(1e-5, 1e5)
-plt.savefig('plots/validation/dijet_extract_theoryxsec.pdf',bbox_inches='tight')
+plt.ylim(1e-5, 1e3)
+plt.savefig('plots/validation/dijet_check_1dinputs.pdf',bbox_inches='tight')
 # And it looks fine. So we can proceed and use these two lines to create a dijet scan.
 
 # And set this as input for the new scan.
 xsec_limit = CrossSectionLimit_Dijet(
   mmed_limit=xlist_xsec,
   xsec_limit=ylist_xsec,
-  mmed_theory=xlist_xsec,
-  xsec_theory=theory_curve,
-  mdm=10000,
+  mmed_theory=x_theory,
+  xsec_theory=y_theory,
+  mdm=1,
   gq=0.25,
-  gdm=0.0,
+  gdm=1.0,
   gl=0.0,
   coupling='vector',
   max_intrinsic_width=0.15
 )
 
-# Now extract some limit plots and compare them to the ones using the original method.
-values_new = xsec_limit.extract_exclusion_depths(scan_A1)
-# And make a plot
-make_plot(scan_A1.mmed, scan_A1.mdm, values_new, "A1_fromxsec", addText=None, addCurves=None, addPoints=True)
+# Get paper exclusion limits and make them into contours.
+for scanname in ["a1","v1"] :
+  draw_contours = []
+  for contour_i in [1,2] :
+    contour_x = []
+    contour_y = []
+    with open("dijet_hepdata/{0}_contour_{1}.txt".format(scanname,contour_i),"r") as read_file :
+      lines = read_file.readlines()
+      for line in lines :
+        tokens = line.split(", ")
+        contour_x.append(float(tokens[0]))
+        contour_y.append(float(tokens[1]))
+    thisline = plt.Line2D(contour_x, contour_y,lw = 2, color ='red')
+    draw_contours.append(thisline)
+  
+  if "a1" in scanname : 
+    text = "Axial-vector\ng$_q$=0.25, g$_\chi$=1.0, g$_l$=0.0"
+    values_new_A1 = xsec_limit.extract_exclusion_depths(scan_A1)
+    make_plot(scan_A1.mmed, scan_A1.mdm, values_new_A1, "A1_fromxsec", addText=text, addCurves=draw_contours, addPoints=True)
+  else : 
+    text = "Vector\ng$_q$=0.25, g$_\chi$=1.0, g$_l$=0.0"
+    values_new_V1 = xsec_limit.extract_exclusion_depths(scan_V1)
+    make_plot(scan_V1.mmed, scan_V1.mdm, values_new_V1, "V1_fromxsec", addText=text, addCurves=draw_contours, addPoints=True)
