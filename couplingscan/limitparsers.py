@@ -365,8 +365,6 @@ class CrossSectionLimit_Dijet(CrossSectionLimit1D) :
                 gdm=self.gdm,
                 gl=self.gl,
             )        
-        #qqwidth_atone = 
-
 
     # Simple in dijet final state
     def extract_coupling_limit_gdm(self, target_gdm, target_gl, target_mdm) :
