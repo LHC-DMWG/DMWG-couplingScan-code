@@ -213,7 +213,7 @@ class CrossSectionLimit1D(abc.ABC):
         # Interpolate theory curve and observed limit curves at the requested granularity.
         interp_xsec_theory = np.interp(scan.mmed, self.mmed_theory, self.xsec_theory,left=0,right=0)
         # The limits may have multiple width curves.
-        interp_limit = lambda mylist : np.interp(scan.mmed, self.mmed_limit, mylist,left=1e3,right=1e3)
+        interp_limit = lambda mylist : np.interp(scan.mmed, self.mmed_limit, mylist,left=np.nan,right=np.nan)
         interp_xsec_limit = np.array([interp_limit(i) for i in self.xsec_limits])
 
         # Get equivalent theory cross sections at the desired mass points in the world of the input xsec limit plot.
@@ -236,7 +236,6 @@ class CrossSectionLimit1D(abc.ABC):
         xsec_plot_world = self.get_approx_xsec(plot_world)
 
         # Scale theory curve to the equivalent values for the scenario of interest.
-        print(xsec_plot_world)
         scaled_theory = interp_xsec_theory*(xsec_scan/xsec_plot_world)
 
         # Exclusion depth in world of plot is observed over theory
@@ -246,7 +245,7 @@ class CrossSectionLimit1D(abc.ABC):
 
         with np.errstate(divide='ignore'):
             exclusion_depth = np.select([scaled_theory == 0.0, scaled_theory > 0],
-                [1000, relevant_limits/scaled_theory],
+                [np.nan, relevant_limits/scaled_theory],
                 default=np.nan)
 
         # Contour is nice and clean this way - avoid interpolation challenges.
@@ -288,19 +287,7 @@ class CrossSectionLimit1D(abc.ABC):
             )
         xsec_plot_world = self.get_approx_xsec(plot_world)        
         rhs_couplinglimit = xsec_plot_world*(self.xsec_limit/self.xsec_theory)
-        return rhs_couplinglimit
-
-    @abc.abstractmethod
-    def extract_coupling_limit_gq(self, target_gdm, target_gl, target_mdm) :
-        pass        
-
-    @abc.abstractmethod
-    def extract_coupling_limit_gdm(self, target_gdm, target_gl, target_mdm) :
-        pass        
-
-    @abc.abstractmethod
-    def extract_coupling_limit_gl(self, target_gdm, target_gl, target_mdm) :
-        pass        
+        return rhs_couplinglimit      
 
 
 # For dijet, unless a different request is made of us in future,
@@ -321,7 +308,7 @@ class CrossSectionLimit_Dijet(CrossSectionLimit1D) :
         if type(self.xsec_limit) is dict :
             print("""You've supplied a dictionary for the limits. The appropriate limit to use
             for each point will be selected based on width. For intrinsic width to mass ratios larger 
-            than the largest dictionary key given, an exclusion depth of 1000 will be set.""")
+            than the largest dictionary key given, a NaN will be returned.""")
             self.widths = list(self.xsec_limit.keys())
             self.xsec_limits = np.array([self.xsec_limit[i] for i in self.xsec_limit.keys()])
         else :
@@ -329,50 +316,13 @@ class CrossSectionLimit_Dijet(CrossSectionLimit1D) :
             limit for all signal points up to an intrinsic width to mass ratio of {0}.
             To adjust the maximum intrinsic width, please set the value of max_intrinsic_width at initialisation
             or supply a dictionary instead. For intrinsic width to mass ratios larger than this value,
-            and exclusion depth of 1000 will be set.""".format(self.max_intrinsic_width))
+            a NaN will be returned.""".format(self.max_intrinsic_width))
             self.widths = [self.max_intrinsic_width]
             self.xsec_limits = np.array([self.xsec_limit])
 
     # This is dijet at hadron colliders: quarks in, quarks out.
     def get_approx_xsec(self, scan) :
         return scan.mediator_partial_width_quarks()**2/scan.mediator_total_width()      
-    
-    # The most annoying one of all - quadratic equation
-    def extract_coupling_limit_gq(self, target_gdm, target_gl, target_mdm, target_model=None, mass_points=None) :
-        if not target_model : target_model = self.coupling
-
-        # Get equivalent theory cross sections at the desired mass points in the world of the input xsec limit plot.
-        RHS = self.get_rhs_couplinglimit()
-
-        # Grid of target couplings
-        target_arrays = self.create_target_arrays(target_gdm, target_gl, target_mdm)
-        print(target_arrays)
-
-        # Create target world with gq=1 and other values from arrays
-        if target_model == 'axial' :
-            target_world = DMAxialModelScan(
-                mmed=scan.mmed,
-                mdm=self.obs_mdm,
-                gq=1.0,
-                gdm=self.gdm,
-                gl=self.gl,
-            )
-        else :
-            plot_world = DMVectorModelScan(
-                mmed=scan.mmed,
-                mdm=self.obs_mdm,
-                gq=1.0,
-                gdm=self.gdm,
-                gl=self.gl,
-            )        
-
-    # Simple in dijet final state
-    def extract_coupling_limit_gdm(self, target_gdm, target_gl, target_mdm) :
-        pass        
-
-    # Simple in dijet final state
-    def extract_coupling_limit_gl(self, target_gdm, target_gl, target_mdm) :
-        pass        
 
 # For dilepton, different visible final state
 # but also include explicit support for varying widths
@@ -397,13 +347,4 @@ class CrossSectionLimit_Dilepton(CrossSectionLimit1D) :
 
     # This is dilepton at hadron colliders: quarks in, leptons out.
     def get_approx_xsec(self, scan) :
-        return scan.mediator_partial_width_quarks()*scan.mediator_partial_width_leptons()/scan.mediator_total_width()
-
-    def extract_coupling_limit_gq(self, target_gdm, target_gl, target_mdm) :
-        pass        
-
-    def extract_coupling_limit_gdm(self, target_gdm, target_gl, target_mdm) :
-        pass        
-
-    def extract_coupling_limit_gl(self, target_gdm, target_gl, target_mdm) :
-        pass         
+        return scan.mediator_partial_width_quarks()*scan.mediator_partial_width_leptons()/scan.mediator_total_width()  
