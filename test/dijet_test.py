@@ -114,14 +114,14 @@ print(values)
 make_plot(scan_A1.mmed, scan_A1.mdm, values, "A1", addText=None, addCurves=None, addPoints=True)
 
 # Get the other three scenarios by rescaling from our scan
-rescaleA1 = Rescaler(scan_A1)
-A2_sfs = rescaleA1.rescale_by_br_quarks(target_gq=0.1,target_gdm=1,target_gl=0.1,model='axial')[(0.1,1,0.1)]
-V_sfs = rescaleA1.rescale_by_br_quarks(target_gq=[0.1,0.25],target_gdm=1,target_gl=[0.0,0.01],model='vector')
-V1_sfs = V_sfs[(0.25,1.0,0.0)]
-V2_sfs = V_sfs[(0.1,1.0,0.01)]
-make_plot(scan_A1.mmed, scan_A1.mdm, values/A2_sfs, "A2_rescaled", addPoints = True)
-make_plot(scan_A1.mmed, scan_A1.mdm, values/V1_sfs, "V1_rescaled", addPoints = True)
-make_plot(scan_A1.mmed, scan_A1.mdm, values/V2_sfs, "V2_rescaled", addPoints = True)
+rescaleA1 = Rescaler(scan_A1, values)
+A2_depths = rescaleA1.rescale_by_br_quarks(target_gq=0.1,target_gdm=1,target_gl=0.1,model='axial')[(0.1,1,0.1)]
+V_depths = rescaleA1.rescale_by_br_quarks(target_gq=[0.1,0.25],target_gdm=1,target_gl=[0.0,0.01],model='vector')
+V1_depths = V_depths[(0.25,1.0,0.0)]
+V2_depths = V_depths[(0.1,1.0,0.01)]
+make_plot(scan_A1.mmed, scan_A1.mdm, A2_depths, "A2_rescaled", addPoints = True)
+make_plot(scan_A1.mmed, scan_A1.mdm, V1_depths, "V1_rescaled", addPoints = True)
+make_plot(scan_A1.mmed, scan_A1.mdm, V2_depths, "V2_rescaled", addPoints = True)
 
 # Now get the other three scenarios via the gq plot directly.
 # Confirm they are identical.

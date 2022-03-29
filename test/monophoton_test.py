@@ -115,7 +115,8 @@ gq=paper_scenario["gq"],
 gdm=paper_scenario["gdm"],
 gl=paper_scenario["gl"],
 )
-rescaler_fromA1 = Rescaler(scan_A1)
+# Set higher valid width since changes to MET acceptance are smaller
+rescaler_fromA1 = Rescaler(scan_A1, zlist, 100.0)
 
 # Now convert to each of our three other scenarios and see how it looks.
 # Do each in a different way.
@@ -127,20 +128,16 @@ new_scenarios = {
 
 # First: rescale to another AV model.
 # For this let's use the propagator method.
-scalefactors_A1toA2 = rescaler_fromA1.rescale_by_propagator(new_scenarios["AV_gq0p1_gl0p1_gchi1p0"]["gq"], new_scenarios["AV_gq0p1_gl0p1_gchi1p0"]["gdm"], new_scenarios["AV_gq0p1_gl0p1_gchi1p0"]["gl"])
+limits_fromA1 = rescaler_fromA1.rescale_by_propagator(new_scenarios["AV_gq0p1_gl0p1_gchi1p0"]["gq"], new_scenarios["AV_gq0p1_gl0p1_gchi1p0"]["gdm"], new_scenarios["AV_gq0p1_gl0p1_gchi1p0"]["gl"])
 # Extract the relevant entry (only one here)
-scalefactors_A1toA2 = scalefactors_A1toA2[(new_scenarios["AV_gq0p1_gl0p1_gchi1p0"]["gq"], new_scenarios["AV_gq0p1_gl0p1_gchi1p0"]["gdm"], new_scenarios["AV_gq0p1_gl0p1_gchi1p0"]["gl"])]
-# Z values are weird, they are actually like 1/z value. So here I want to divide by my scale factors,
-# not multiply by them.
-limits_A2 = zlist/scalefactors_A1toA2
+limits_A2 = limits_fromA1[(new_scenarios["AV_gq0p1_gl0p1_gchi1p0"]["gq"], new_scenarios["AV_gq0p1_gl0p1_gchi1p0"]["gdm"], new_scenarios["AV_gq0p1_gl0p1_gchi1p0"]["gl"])]
 new_scenarios["AV_gq0p1_gl0p1_gchi1p0"]["limits"] = limits_A2
 print("Finished A2 limits")
 
 # Second: scale to a vector model.
 # Here we need to use the hadron level cross section.
-scalefactors_A1toV1 = rescaler_fromA1.rescale_by_hadronic_xsec_monox(new_scenarios["V_gq0p25_gchi1p0"]["gq"],new_scenarios["V_gq0p25_gchi1p0"]["gdm"],new_scenarios["V_gq0p25_gchi1p0"]["gl"],'vector')
-scalefactors_A1toV1 = scalefactors_A1toV1[(new_scenarios["V_gq0p25_gchi1p0"]["gq"],new_scenarios["V_gq0p25_gchi1p0"]["gdm"],new_scenarios["V_gq0p25_gchi1p0"]["gl"])]
-limits_V1 = zlist/scalefactors_A1toV1
+limits_V1_full = rescaler_fromA1.rescale_by_hadronic_xsec_monox(new_scenarios["V_gq0p25_gchi1p0"]["gq"],new_scenarios["V_gq0p25_gchi1p0"]["gdm"],new_scenarios["V_gq0p25_gchi1p0"]["gl"],'vector')
+limits_V1 = limits_V1_full[(new_scenarios["V_gq0p25_gchi1p0"]["gq"],new_scenarios["V_gq0p25_gchi1p0"]["gdm"],new_scenarios["V_gq0p25_gchi1p0"]["gl"])]
 new_scenarios["V_gq0p25_gchi1p0"]["limits"] = limits_V1
 print("Finished V1 limits")
 
@@ -154,10 +151,10 @@ gq=new_scenarios["V_gq0p25_gchi1p0"]["gq"],
 gdm=new_scenarios["V_gq0p25_gchi1p0"]["gdm"],
 gl=new_scenarios["V_gq0p25_gchi1p0"]["gl"],
 )
-rescaler_fromV1 = Rescaler(scan_V1)
-scalefactors_V1toV2 = rescaler_fromV1.rescale_by_propagator(new_scenarios["V_gq0p1_gl0p01_gchi1p0"]["gq"],new_scenarios["V_gq0p1_gl0p01_gchi1p0"]["gdm"],new_scenarios["V_gq0p1_gl0p01_gchi1p0"]["gl"],'vector')
-scalefactors_V1toV2 = scalefactors_V1toV2[(new_scenarios["V_gq0p1_gl0p01_gchi1p0"]["gq"],new_scenarios["V_gq0p1_gl0p01_gchi1p0"]["gdm"],new_scenarios["V_gq0p1_gl0p01_gchi1p0"]["gl"])]
-limits_V2 = limits_V1/scalefactors_V1toV2
+# Set higher valid width since changes to MET acceptance are smaller
+rescaler_fromV1 = Rescaler(scan_V1, limits_V1, 100.0)
+limits_vector = rescaler_fromV1.rescale_by_propagator(new_scenarios["V_gq0p1_gl0p01_gchi1p0"]["gq"],new_scenarios["V_gq0p1_gl0p01_gchi1p0"]["gdm"],new_scenarios["V_gq0p1_gl0p01_gchi1p0"]["gl"],'vector')
+limits_V2 = limits_vector[(new_scenarios["V_gq0p1_gl0p01_gchi1p0"]["gq"],new_scenarios["V_gq0p1_gl0p01_gchi1p0"]["gdm"],new_scenarios["V_gq0p1_gl0p01_gchi1p0"]["gl"])]
 new_scenarios["V_gq0p1_gl0p01_gchi1p0"]["limits"] = limits_V2
 
 # Now ready to make plots.

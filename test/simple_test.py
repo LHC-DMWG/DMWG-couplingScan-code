@@ -76,7 +76,8 @@ print("Hadron level:")
 #print(scan4.hadron_level_xsec_monox_relative())
 
 # Now let's try a rescaler.
-rescaleA1 = Rescaler(scan4)
+# Give it depths = 1 and it will just return scale factors.
+rescaleA1 = Rescaler(scan4,[1 for i in scan4.mmed])
 # Put some target couplings and target model,
 # and pick method to use to get scale factors.
 scalefactors_A2 = rescaleA1.rescale_by_br_quarks(target_gq=0.1,target_gdm=1,target_gl=0.01,model='axial')
