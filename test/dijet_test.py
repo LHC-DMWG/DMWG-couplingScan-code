@@ -13,6 +13,14 @@ plot_tag = ""
 
 analysis_tag = "CMS-EXO-16-056"
 
+def clean_grid(xvals, yvals, zvals) :
+  if zvals.size == 0 :
+    return np.array([]), np.array([]), np.array([])
+  xclean = xvals[np.logical_and(np.logical_and(np.isfinite(xvals),np.isfinite(yvals)),np.isfinite(zvals))]
+  yclean = yvals[np.logical_and(np.logical_and(np.isfinite(xvals),np.isfinite(yvals)),np.isfinite(zvals))]
+  zclean = zvals[np.logical_and(np.logical_and(np.isfinite(xvals),np.isfinite(yvals)),np.isfinite(zvals))]
+  return xclean, yclean, zclean
+
 def get_aspect_ratio(ax) :
   ratio = 1.0
   xleft, xright = ax.get_xlim()
@@ -100,6 +108,7 @@ gl=0.0,
 )
 
 values = gq_limit.extract_exclusion_depths(scan_A1)
+print(values)
 
 # Make a plot
 make_plot(scan_A1.mmed, scan_A1.mdm, values, "A1", addText=None, addCurves=None, addPoints=True)
@@ -191,8 +200,10 @@ for scanname in ["a1","v1"] :
   if "a1" in scanname : 
     text = "Axial-vector\ng$_q$=0.25, g$_\chi$=1.0, g$_l$=0.0"
     values_new_A1 = xsec_limit.extract_exclusion_depths(scan_A1)
-    make_plot(scan_A1.mmed, scan_A1.mdm, values_new_A1, "A1_fromxsec", addText=text, addCurves=draw_contours, addPoints=True)
+    x, y, z = clean_grid(scan_A1.mmed, scan_A1.mdm, values_new_A1)
+    make_plot(x, y, z, "A1_fromxsec", addText=text, addCurves=draw_contours, addPoints=True)
   else : 
     text = "Vector\ng$_q$=0.25, g$_\chi$=1.0, g$_l$=0.0"
     values_new_V1 = xsec_limit.extract_exclusion_depths(scan_V1)
-    make_plot(scan_V1.mmed, scan_V1.mdm, values_new_V1, "V1_fromxsec", addText=text, addCurves=draw_contours, addPoints=True)
+    x, y, z = clean_grid(scan_V1.mmed, scan_V1.mdm, values_new_V1)
+    make_plot(x, y, z, "V1_fromxsec", addText=text, addCurves=draw_contours, addPoints=True)

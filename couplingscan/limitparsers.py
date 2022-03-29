@@ -149,53 +149,20 @@ class CrossSectionLimit1D(abc.ABC):
     def get_approx_xsec(self, scan) :
         pass
 
-    def pick_appropriate_limit(self, test_widths, granular_limits) :
+    # limit_sets are the ones to select from
+    # test_widths are the widths for which you need limit values
+    def pick_appropriate_limit(self, test_widths, limit_widths, limit_sets) :
         # Linear interpolate between observed limits at points of interest.
         # If smaller width than smallest provided, use smallest provided.
         # If larger than largest provided, no limit can be set.
         appropriate_limits = []
-        for width, limits in zip(test_widths,granular_limits.transpose()) :
-            appropriate_observed = np.interp([width], self.widths, limits,left=limits[0],right=math.nan)
+        for width, limits in zip(test_widths,limit_sets.transpose()) :
+            appropriate_observed = np.interp([width], limit_widths, limits,left=limits[0],right=math.nan)
             appropriate_limits.append(appropriate_observed[0])
-        return np.array(appropriate_limits)
-
-    # The following function was borrowed directly from user DanHickstein on StackOverflow - thanks!
-    # https://stackoverflow.com/questions/42464334/find-the-intersection-of-two-curves-given-by-x-y-data-with-high-precision-in
-    def interpolated_intercepts(self, x, y1, y2) :
-        def intercept(point1, point2, point3, point4) :
-            def line(p1, p2):
-                A = (p1[1] - p2[1])
-                B = (p2[0] - p1[0])
-                C = (p1[0]*p2[1] - p2[0]*p1[1])
-                return A, B, -C
-
-            def intersection(L1, L2):
-                D  = L1[0] * L2[1] - L1[1] * L2[0]
-                Dx = L1[2] * L2[1] - L1[1] * L2[2]
-                Dy = L1[0] * L2[2] - L1[2] * L2[0]
-
-                x = Dx / D
-                y = Dy / D
-                return x,y
-
-            L1 = line([point1[0],point1[1]], [point2[0],point2[1]])
-            L2 = line([point3[0],point3[1]], [point4[0],point4[1]])
-
-            R = intersection(L1, L2)
-
-            return R
-
-        idxs = np.argwhere(np.diff(np.sign(y1 - y2)) != 0)
-        xcs = []
-        ycs = []
-        for idx in idxs:
-            xc, yc = intercept((x[idx], y1[idx]),((x[idx+1], y1[idx+1])), ((x[idx], y2[idx])), ((x[idx+1], y2[idx+1])))
-            xcs.append(xc[0])
-            ycs.append(yc[0])
-        return np.array([xcs,ycs])
+        return np.array(appropriate_limits)        
 
     # This will call the inheriting methods where the cross sections differ.
-    def extract_exclusion_depths(self, scan, collect_contour = False) :
+    def extract_exclusion_depths(self, scan) :
 
         # Here we have a cross section and a (set of) observed limit(s).
         # Want to scale the cross section to the target scenarios and take
@@ -207,14 +174,11 @@ class CrossSectionLimit1D(abc.ABC):
         # Extract full cross sections for scan scenario.
         xsec_scan = self.get_approx_xsec(scan)
 
-        # Calculate full widths also: we'll need this.
-        widths_scan = scan.mediator_total_width()/scan.mmed
-
         # Interpolate theory curve and observed limit curves at the requested granularity.
         interp_xsec_theory = np.interp(scan.mmed, self.mmed_theory, self.xsec_theory,left=0,right=0)
         # The limits may have multiple width curves.
         interp_limit = lambda mylist : np.interp(scan.mmed, self.mmed_limit, mylist,left=np.nan,right=np.nan)
-        interp_xsec_limit = np.array([interp_limit(i) for i in self.xsec_limits])
+        interp_xsec_limits = np.array([interp_limit(i) for i in self.xsec_limits])
 
         # Get equivalent theory cross sections at the desired mass points in the world of the input xsec limit plot.
         if self.coupling == 'axial' :
@@ -239,34 +203,27 @@ class CrossSectionLimit1D(abc.ABC):
         scaled_theory = interp_xsec_theory*(xsec_scan/xsec_plot_world)
 
         # Exclusion depth in world of plot is observed over theory
-        # Which observed line? This depends on the intrinsic width.
-        # Obtain and calculate the ratio.
-        relevant_limits = self.pick_appropriate_limit(widths_scan,interp_xsec_limit)
-
-        with np.errstate(divide='ignore'):
-            exclusion_depth = np.select([scaled_theory == 0.0, scaled_theory > 0],
-                [np.nan, relevant_limits/scaled_theory],
+        # Want to return full set of exclusion depths for the widths given,
+        # if multiple, so they can be used for other rescalings.
+        compute_depth = lambda mylist : np.select([scaled_theory == 0.0, scaled_theory > 0],
+                [np.nan, mylist/scaled_theory],
                 default=np.nan)
+        with np.errstate(divide='ignore'):
+            exclusion_depths = [compute_depth(i) for i in interp_xsec_limits]
 
-        # Contour is nice and clean this way - avoid interpolation challenges.
-        # So give user the opportunity to collect it too if desired.
-        if collect_contour :
-            # Need actual shape: get number of unique mediator mass values
-            n_med_masses = len(np.unique(scan.mmed))
-            test_strips = np.reshape(relevant_limits,(-1,n_med_masses))
-            theory_lines = np.reshape(scaled_theory,(-1,n_med_masses))
-            dmvals = np.reshape(scan.mdm,(-1,n_med_masses))
-            these_xvals = scan.mmed[:n_med_masses]
-            myarray = []
-            for strip, line, val in zip(test_strips, theory_lines, dmvals[:,0]) :
-                edge_points = self.interpolated_intercepts(these_xvals, strip, line)
-                for xval, yval in zip(edge_points[0],edge_points[1]) :
-                    myarray.append([xval,val])
-            myarray = np.array(myarray)
-            sorted_edges = myarray[myarray[:,0].argsort()]
-            return exclusion_depth, sorted_edges
+        # If we were given a width dict, return one. Otherwise just return the depths.
+        if type(self.xsec_limit) is dict :
+            return {k : v for k, v in zip(self.widths,exclusion_depths)}
+        else : return exclusion_depths[0]
 
-        else : return exclusion_depth 
+    # If we are not planning on using a rescaler
+    # and instead really want the appropriate depths per width for a given scan:
+    def select_depths(self,scan,depths) :
+        
+        widths_scan = scan.mediator_total_width()/scan.mmed
+        # Was: one per mediator value being tested
+        use_limits = self.pick_appropriate_limit(widths_scan,list(depths.keys()),np.array([depths[i] for i in depths.keys()]))
+        return use_limits
 
     def get_rhs_couplinglimit(self) :
         if self.coupling == 'axial' :
@@ -310,7 +267,7 @@ class CrossSectionLimit_Dijet(CrossSectionLimit1D) :
             for each point will be selected based on width. For intrinsic width to mass ratios larger 
             than the largest dictionary key given, a NaN will be returned.""")
             self.widths = list(self.xsec_limit.keys())
-            self.xsec_limits = np.array([self.xsec_limit[i] for i in self.xsec_limit.keys()])
+            self.xsec_limits = np.array([self.xsec_limit[i] for i in self.widths])
         else :
             print("""You have supplied a single limit curve. This will be considered the appropriate
             limit for all signal points up to an intrinsic width to mass ratio of {0}.

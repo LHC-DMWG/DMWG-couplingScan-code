@@ -1,15 +1,33 @@
 import numpy as np
 from couplingscan.scan import *
+import math
 
 # Each rescaler has a reference scan against which the others are scaled.
-class Rescaler():
+@dataclass
+class Rescaler(abc.ABC):
     # Class that houses rescaling operations
     # All methods return a multiplicative factor used to rescale signal cross sections
+    reference_scan : DMModelScan
+    reference_exclusion_depths : float
+    max_intrinsic_width : float = 0.1
 
-    def __init__(self, reference_scan) :
-        self.reference_scan = reference_scan
-
+    def __post_init__(self) :
         self.check_ref_scan()
+
+        if type(self.reference_exclusion_depths) is dict :
+            print("""You've supplied a dictionary for the limits. The appropriate limit to use
+            for each point will be selected based on width. For intrinsic width to mass ratios larger 
+            than the largest dictionary key given, a NaN will be returned.""")
+            self.widths = list(self.reference_exclusion_depths.keys())
+            self.exclusion_depths = np.array([self.reference_exclusion_depths[i] for i in self.widths])
+        else :
+            print("""You have supplied a single limit curve. This will be considered the appropriate
+            limit for all signal points up to an intrinsic width to mass ratio of {0}.
+            To adjust the maximum intrinsic width, please set the value of max_intrinsic_width at initialisation
+            or supply a dictionary instead. For intrinsic width to mass ratios larger than this value,
+            a NaN will be returned.""".format(self.max_intrinsic_width))
+            self.widths = [self.max_intrinsic_width]
+            self.exclusion_depths = np.array([self.reference_exclusion_depths])     
 
     def check_ref_scan(self) :
         '''Need to confirm the reference scan makes sense.
@@ -103,6 +121,18 @@ class Rescaler():
 
         return target_scan
 
+    def pick_appropriate_limit(self, test_widths) :
+        # Linear interpolate between observed limits at points of interest.
+        # If smaller width than smallest provided, use smallest provided.
+        # If larger than largest provided, no limit can be set.
+        appropriate_limits = []
+        for width, limits in zip(test_widths,self.exclusion_depths.transpose()) :
+            #print("Width is",width,"compared to given values",self.widths)
+            appropriate_observed = np.interp([width], self.widths, limits,left=limits[0],right=math.nan)
+            #print("Selected limit",appropriate_observed[0])
+            appropriate_limits.append(appropriate_observed[0])
+        return np.array(appropriate_limits)
+
     def format_output(self, scale_factors, target_arrays) :
 
         # Squish output down to a manageable format.
@@ -138,7 +168,16 @@ class Rescaler():
         # Now this is also broadcastable
         scale_factors = target_factors / reference_factor
 
-        return self.format_output(scale_factors,target_arrays)
+        # Go to actual limits, selecting for widths
+        widths_scan = target_scan.mediator_total_width()/target_scan.mmed
+
+        # And actually turn this into exclusion depths - fewer ways for user to be confused.
+        # When multiple exclusion depth planes supplied, the one to scale is the one corresponding
+        # to the width of the point being tested (or interpolated from them).
+        observed_limits = self.pick_appropriate_limit(widths_scan)
+        exclusion_depth = observed_limits/scale_factors
+
+        return self.format_output(exclusion_depth,target_arrays)
 
     def rescale_by_br_leptons(self, target_gq, target_gdm, target_gl,model=None):
         '''Rescale according to gq^2 * BR(med->DM DM). All possible
@@ -164,8 +203,16 @@ class Rescaler():
         # Now this is also broadcastable        
         scale_factors = target_factors / reference_factor
 
-        # Return nicely formatted results
-        return self.format_output(scale_factors,target_arrays)
+        # Go to actual limits, selecting for widths
+        widths_scan = target_scan.mediator_total_width()/target_scan.mmed
+
+        # And actually turn this into exclusion depths - fewer ways for user to be confused.
+        # When multiple exclusion depth planes supplied, the one to scale is the one corresponding
+        # to the width of the point being tested (or interpolated from them).
+        observed_limits = self.pick_appropriate_limit(widths_scan)
+        exclusion_depth = observed_limits/scale_factors
+
+        return self.format_output(exclusion_depth,target_arrays)
 
     def rescale_by_propagator(self,target_gq, target_gdm, target_gl, model=None):
         # Check that this method of rescaling makes sense for the
@@ -187,8 +234,16 @@ class Rescaler():
         # Now this is also broadcastable        
         scale_factors = target_factors / reference_factor        
         
-        # Return nicely formatted results
-        return self.format_output(scale_factors,target_arrays)
+        # Go to actual limits, selecting for widths
+        widths_scan = target_scan.mediator_total_width()/target_scan.mmed
+
+        # And actually turn this into exclusion depths - fewer ways for user to be confused.
+        # When multiple exclusion depth planes supplied, the one to scale is the one corresponding
+        # to the width of the point being tested (or interpolated from them).
+        observed_limits = self.pick_appropriate_limit(widths_scan)
+        exclusion_depth = observed_limits/scale_factors
+
+        return self.format_output(exclusion_depth,target_arrays)
 
     def rescale_by_hadronic_xsec_monox(self,target_gq, target_gdm, target_gl, model=None):
         '''Rescale using hadronic-level cross sections.'''
@@ -219,8 +274,16 @@ class Rescaler():
         # Now this is also broadcastable        
         scale_factors = target_factors / reference_factor        
         
-        # Return nicely formatted results
-        return self.format_output(scale_factors,target_arrays)
+        # Go to actual limits, selecting for widths
+        widths_scan = target_scan.mediator_total_width()/target_scan.mmed
+
+        # And actually turn this into exclusion depths - fewer ways for user to be confused.
+        # When multiple exclusion depth planes supplied, the one to scale is the one corresponding
+        # to the width of the point being tested (or interpolated from them).
+        observed_limits = self.pick_appropriate_limit(widths_scan)
+        exclusion_depth = observed_limits/scale_factors
+
+        return self.format_output(exclusion_depth,target_arrays)
 
     def rescale_by_parton_level_xsec_monox(self,target_gq, target_gdm, target_gl, model=None):
         '''Rescale using parton-level cross sections.'''
@@ -247,5 +310,13 @@ class Rescaler():
         # Now this is also broadcastable        
         scale_factors = target_factors / reference_factor        
         
-        # Return nicely formatted results
-        return self.format_output(scale_factors,target_arrays)
+        # Go to actual limits, selecting for widths
+        widths_scan = target_scan.mediator_total_width()/target_scan.mmed
+
+        # And actually turn this into exclusion depths - fewer ways for user to be confused.
+        # When multiple exclusion depth planes supplied, the one to scale is the one corresponding
+        # to the width of the point being tested (or interpolated from them).
+        observed_limits = self.pick_appropriate_limit(widths_scan)
+        exclusion_depth = observed_limits/scale_factors
+
+        return self.format_output(exclusion_depth,target_arrays)
