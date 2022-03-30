@@ -175,9 +175,10 @@ class CrossSectionLimit1D(abc.ABC):
         xsec_scan = self.get_approx_xsec(scan)
 
         # Interpolate theory curve and observed limit curves at the requested granularity.
-        interp_xsec_theory = np.interp(scan.mmed, self.mmed_theory, self.xsec_theory,left=0,right=0)
+        # Want interpolation to be log, not linear (that is, linear in y log axis plot).
+        interp_xsec_theory = np.exp(np.interp(scan.mmed, self.mmed_theory, np.log(self.xsec_theory),left=np.nan,right=np.nan))
         # The limits may have multiple width curves.
-        interp_limit = lambda mylist : np.interp(scan.mmed, self.mmed_limit, mylist,left=np.nan,right=np.nan)
+        interp_limit = lambda mylist : np.exp(np.interp(scan.mmed, self.mmed_limit, np.log(mylist),left=np.nan,right=np.nan))
         interp_xsec_limits = np.array([interp_limit(i) for i in self.xsec_limits])
 
         # Get equivalent theory cross sections at the desired mass points in the world of the input xsec limit plot.
