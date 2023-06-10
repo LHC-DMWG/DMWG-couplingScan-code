@@ -53,7 +53,7 @@ pip install numpy
 pip install scipy
 ```
 
-If you want to be able to convert vector to axial vector and vise versa, you will need lhapdf too. If you want to just test without that for now, you can install without it, but long-term it is probably helpful. If you are on lxplus, lhapdf is already available. If i remember correctly, you need to do this:
+If you want to be able to convert vector to axial vector and vise versa, you will need lhapdf too. If you want to just test without that for now, you can install without it, but long-term it is probably helpful. If you are on lxplus, lhapdf is already available. Please edit if this is incorrect, but I believe you can use:
 ```
 LHAPDF_LIBRARY_PATH=/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current/:/cvmfs/sft.cern.ch/lcg/releases/LCG_97python3/MCGenerators/lhapdf/6.2.3/x86_64-centos7-gcc9-opt/share/LHAPDF/
 ```
@@ -80,6 +80,6 @@ To test/use as a general user would do, you can use the pip install instructions
 
 ## Usage examples
 
-See simple working examples here: https://github.com/LHC-DMWG/DMWG-couplingScan-code/blob/master/test/simple_test.py
+See simple working examples for different input data types in the `test` repository. These all refer to and test based on the four nominal parameter scenarios from the DMWG ( Phys.Dark Univ. 27 (2020) 100365), translating existing limits back and forth between them.
 
-TODO extend this section
+TODO paste here the text from the appendix.
