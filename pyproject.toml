@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools", "pip", "pybind11"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "couplingscan"
+version = "0.1.0"
+authors = [    
+    {name = 'LHC Dark Matter Working Group', email = 'lhc-dmwg-contributors-couplingscan@cern.ch'}
+]
+description = "Package allowing easy rescaling of spin-1 DM simplified models between coupling values."
+readme = "README.md"
+requires-python = ">=3.7"
+license = {text = "BSD-3-Clause"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+]

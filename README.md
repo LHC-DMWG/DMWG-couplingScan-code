@@ -5,30 +5,30 @@ This code expects to receive masses *in units of GeV*. If you supply masses in o
 
 ## Dependencies and general installation
 
-The package depends on:
+The package depends on the following Python packages:
 
 ```
 pybind11
 numpy
 scipy
 ```
+These dependencies should be handled automatically by the installation. 
 
-To access the full abilities of this package (i.e. converting between models instead of only within models), you need lhapdf installed. If you only want to rescale within a model and this functionality does not interest you, you can compile with the `no-lhapdf` flag:
+To access the full abilities of this package (i.e. converting between models instead of only within models), you *also* need lhapdf installed. If you only want to rescale within a model and this functionality does not interest you, you can still compile without lhapdf. However, if you attempt to use any functions that rely on it, you will get errors.
+
+Note that since pip 23.1, it is no longer supported for pip-installed packages to customise the installation with command line flags. Thus we are no longer asking for installation to specifically deactivate lhapdf. This could lead to more unexpected errors. To check if you have lhapdf available, run `lhapdf-config`. If this command exists, the installation should work. Use command `-v` to see whether lhapdf was successfully found during installation.
 
 ```
-pip install git+https://github.com/LHC-DMWG/DMWG-couplingScan-code.git
-```
-or
-```
-pip install git+https://github.com/LHC-DMWG/DMWG-couplingScan-code.git --install-option="--no-lhapdf"
+pip install -v git+https://github.com/LHC-DMWG/DMWG-couplingScan-code.git
 ```
 
 ****
 
 
-## Install LHAPDF manually [another way of installation]
+## To install LHAPDF 
 
-After following the section "Quick start instructions" on https://lhapdf.hepforge.org/install.html, we have to download the data files and link the dynamical path and data path to the right place. i.e. after
+If you don't have LHAPDF available, install it. After following the section "Quick start instructions" on https://lhapdf.hepforge.org/install.html, we have to download the data files for the PDF set we want to run with. Luckily, this is quite straightforward:
+
 ```make install```
 on LHAPDF instruction, do
 ```
@@ -41,7 +41,7 @@ Now, do the below procedures to pip install all the relevant dependencies locall
 
 ## Installation in development mode [instructions for Boyu and Josh]
 
-Hi guys! You can do the above if you want but you will probably prefer to have access to the code locally. I would suggest you do this:
+If you want to develop
 
 ```
 python -m venv thisvenv
@@ -83,3 +83,11 @@ To test/use as a general user would do, you can use the pip install instructions
 See simple working examples for different input data types in the `test` repository. These all refer to and test based on the four nominal parameter scenarios from the DMWG ( Phys.Dark Univ. 27 (2020) 100365), translating existing limits back and forth between them.
 
 TODO paste here the text from the appendix.
+
+
+## With newer pip
+
+Required for PEP 517 and newer:
+
+```python -m pip install -e . --config-settings="nolhapdf=True"
+```
