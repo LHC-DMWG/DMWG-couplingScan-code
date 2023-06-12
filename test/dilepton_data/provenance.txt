@@ -1,0 +1,4 @@
+Observed limits are from here:
+https://atlas.web.cern.ch/Atlas/GROUPS/PHYSICS/PAPERS/EXOT-2018-08/
+
+Theory curve is not published by anyone, so I've approximated it using WebPlotDigitizer and an internal plot from Etienne showing the sigma x A x E at mdm = 0.0025 with a vector mediator and gq=0.1, gl=0.01, gdm=1
