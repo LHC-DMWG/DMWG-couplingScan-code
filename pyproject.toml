@@ -21,3 +21,9 @@ dependencies = [
     "scipy",
     "matplotlib",
 ]
+
+[project.urls]
+Homepage = "https://github.com/LHC-DMWG/DMWG-couplingScan-code/tree/master"
+
+[tool.setuptools.packages.find]
+include = ["couplingscan*"]
