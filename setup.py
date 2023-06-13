@@ -1,7 +1,9 @@
 from setuptools import setup
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 import subprocess
-import sys
+import sys, os
+
+cxx_std = int(os.environ.get("CMAKE_CXX_STANDARD", "14"))
 
 # Detailed examples: 
 # https://github.com/pybind/pybind11_benchmark/blob/master/setup.py
@@ -37,6 +39,7 @@ def get_extmodules() :
         ext_modules = [
             Pybind11Extension(
                 "lhapdfwrap",
+                cxx_std=cxx_std,
                 sources = ["src/lhapdf_integrands.cpp"],
                 library_dirs = [lhapdf_dirs[0]],
                 libraries = ['LHAPDF'],
