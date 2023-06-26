@@ -145,9 +145,10 @@ class Rescaler(abc.ABC):
         return output_dict
 
     def rescale_by_br_quarks(self,target_gq, target_gdm, target_gl, model=None) :
-        '''Rescale according to gq^2 * BR(med->DM DM). All possible
+        '''Rescale according to BR(qq)^2/total width. All possible
         combinations of specified couplings will be tested and
-        results will be returned along with the coupling values they correspond to.'''
+        results will be returned along with the coupling values they correspond to.
+        This method is appropriate for limits from di-quark final states.'''
         
         # Check that this method of rescaling makes sense for the
         # target and reference scan types:
@@ -180,9 +181,10 @@ class Rescaler(abc.ABC):
         return self.format_output(exclusion_depth,target_arrays)
 
     def rescale_by_br_leptons(self, target_gq, target_gdm, target_gl,model=None):
-        '''Rescale according to gq^2 * BR(med->DM DM). All possible
+        '''Rescale according to BR(ll)^2/total width. All possible
         combinations of specified couplings will be tested and
-        results will be returned along with the coupling values they correspond to.'''
+        results will be returned along with the coupling values they correspond to.
+        This method is appropriate for limits from dilepton final states.'''
         
         # Check that this method of rescaling makes sense for the
         # target and reference scan types:
@@ -215,6 +217,11 @@ class Rescaler(abc.ABC):
         return self.format_output(exclusion_depth,target_arrays)
 
     def rescale_by_propagator(self,target_gq, target_gdm, target_gl, model=None):
+        '''Rescale according to I_prop = ratio of the propagators for the mediator particle.
+        All possible combinations of specified couplings will be tested and
+        results will be returned along with the coupling values they correspond to.
+        This method is appropriate for any case where the initial and target scans
+        are in the same model.'''
         # Check that this method of rescaling makes sense for the
         # target and reference scan types:
         if not model : model = self.reference_scan._coupling
@@ -246,7 +253,12 @@ class Rescaler(abc.ABC):
         return self.format_output(exclusion_depth,target_arrays)
 
     def rescale_by_hadronic_xsec_monox(self,target_gq, target_gdm, target_gl, model=None):
-        '''Rescale using hadronic-level cross sections.'''
+        '''Rescale mono-X limits using the ratio of hadron-level cross sections. 
+        All possible combinations of specified couplings will be tested and
+        results will be returned along with the coupling values they correspond to.
+        However, due to the lengthy calculation time required, it is recommended 
+        to use this for a single target scenario only, and only for cases where the
+        target scenario is in a different model than the initial scan.'''
 
         # Check that this method of rescaling makes sense for the
         # target and reference scan types:
@@ -286,7 +298,8 @@ class Rescaler(abc.ABC):
         return self.format_output(exclusion_depth,target_arrays)
 
     def rescale_by_parton_level_xsec_monox(self,target_gq, target_gdm, target_gl, model=None):
-        '''Rescale using parton-level cross sections.'''
+        '''Rescale using parton-level cross sections. This method is discouraged for
+        analysis, as it does not produce optimal results for any situation.'''
 
         print('''Warning: the parton-level cross section is not the best-performing rescaling method
         in any hadron collider scenario. Consider using something else!''')

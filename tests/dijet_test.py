@@ -55,7 +55,9 @@ make_plot(scan_A1.mmed, scan_A1.mdm, values, [500, 3500], [0, 1700], analysis_ta
 
 # Get the other three scenarios by rescaling from our scan
 rescaleA1 = Rescaler(scan_A1, values)
-A2_depths = rescaleA1.rescale_by_br_quarks(target_gq=0.1,target_gdm=1,target_gl=0.1,model='axial')[(0.1,1,0.1)]
+A2_depths = rescaleA1.rescale_by_br_quarks(
+    target_gq=0.1,target_gdm=1,target_gl=0.1,
+    model='axial')[(0.1,1,0.1)]
 V_depths = rescaleA1.rescale_by_br_quarks(target_gq=[0.1,0.25],target_gdm=1,target_gl=[0.0,0.01],model='vector')
 V1_depths = V_depths[(0.25,1.0,0.0)]
 V2_depths = V_depths[(0.1,1.0,0.01)]

@@ -19,7 +19,7 @@ To access the full abilities of this package (i.e. converting between models ins
 To check if you have lhapdf available, run `lhapdf-config`. If this command exists, the installation should work.
 
 ```
-python -m pip install -v git+https://github.com/LHC-DMWG/DMWG-couplingScan-code.git
+python -m pip install git+https://github.com/LHC-DMWG/DMWG-couplingScan-code.git
 ```
 
 ## Installing/accessing LHAPDF 
@@ -40,8 +40,12 @@ tar -xzvf NNPDF30_nlo_as_0118.tar.gz
 export LHAPDF_DATA_PATH=$LHAPDF_DATA_PATH:/path/to/folder-containsing-NNPDF30_nlo_as_0118
 ```
 
+## When running
+
+Integration warnings are fairly common when running the mono-X scans, with two or three often arising per grid studied. These do not so far appear to cause any real numerical instabilities in the results or have visible consequences, so 
+
 ## Usage examples
 
-See simple working examples for different input data types in the `test` repository. These all refer to and test based on the four nominal parameter scenarios from the DMWG ( Phys.Dark Univ. 27 (2020) 100365), translating existing limits back and forth between them.
+See simple working examples for different input data types in the `test` repository. These all refer to and test based on the four nominal parameter scenarios from the DMWG (Phys.Dark Univ. 27 (2020) 100365), translating existing limits back and forth between them.
 
 TODO paste here the text from the appendix.

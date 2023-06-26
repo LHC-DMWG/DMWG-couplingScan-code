@@ -39,7 +39,6 @@ with open("monophoton_hepdata/hepdata_{0}.json".format(scenario_tag), "r") as re
 values = data["values"]
 
 # Extract as numpy arrays
-# Note: to run on monojet, swap the [1] and [0] in first two rows.
 xlist = np.array([val["x"][1]["value"] for val in values]).astype(float)
 ylist = np.array([val["x"][0]["value"] for val in values]).astype(float)
 zlist = np.array([val["y"][0]["value"] for val in values]).astype(float)
