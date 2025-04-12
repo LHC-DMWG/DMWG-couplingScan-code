@@ -37,11 +37,10 @@ wget http://lhapdfsets.web.cern.ch/lhapdfsets/current/NNPDF30_nlo_as_0118.tar.gz
 tar -xzvf NNPDF30_nlo_as_0118.tar.gz
 export LHAPDF_DATA_PATH=$LHAPDF_DATA_PATH:/path/to/folder-contains-NNPDF30_nlo_as_0118-folder
 ```
-Now, do the below procedures to pip install all the relevant dependencies locally. Please do the installation in "dev mode" with lhapdf.
 
-## Installation in development mode [instructions for Boyu and Josh]
+## Installation in development mode (for contributors to the package)
 
-If you want to develop
+If you want to develop the code, follow this:
 
 ```
 python -m venv thisvenv
@@ -53,13 +52,13 @@ pip install numpy
 pip install scipy
 ```
 
-If you want to be able to convert vector to axial vector and vise versa, you will need lhapdf too. If you want to just test without that for now, you can install without it, but long-term it is probably helpful. If you are on lxplus, lhapdf is already available. Please edit if this is incorrect, but I believe you can use:
+And you need lhapdf too. If you are on lxplus, lhapdf is already available. Please edit if this is incorrect, but I believe you can use:
 ```
 LHAPDF_LIBRARY_PATH=/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current/:/cvmfs/sft.cern.ch/lcg/releases/LCG_97python3/MCGenerators/lhapdf/6.2.3/x86_64-centos7-gcc9-opt/share/LHAPDF/
 ```
-If it's set up correctly you shoudl also be able to run `lhapdf-config` and see some output (the help menu) indicating it correctly found that script. Unfortunately I lost lxplus access a while ago and so I can't test this ... Please feel free to make edits directly to this README once you figure out what you need to get this to work.
+If it's set up correctly you shoudl also be able to run `lhapdf-config` and see some output (the help menu) indicating it correctly found that script. 
 
-If you're on your laptop and you want lhapdf, you'll have to install it yourself. You can use the `lhapdf-config` test again.
+If you're on your laptop and you want lhapdf, you'll have to install it yourself following the instructions above. You can use the `lhapdf-config` test again.
 
 Now, to install in "dev mode", that is so that you get a local copy of the code and can develop it, do this:
 
@@ -76,5 +75,3 @@ To test/use as a general user would do, you can use the pip install instructions
 ## Usage examples
 
 See simple working examples for different input data types in the `test` repository. These all refer to and test based on the four nominal parameter scenarios from the DMWG ( Phys.Dark Univ. 27 (2020) 100365), translating existing limits back and forth between them.
-
-TODO paste here the text from the appendix.
