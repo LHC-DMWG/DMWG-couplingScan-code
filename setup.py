@@ -41,6 +41,7 @@ def get_extmodules() :
                 library_dirs = [lhapdf_dirs[0]],
                 libraries = ['LHAPDF'],
                 include_dirs = [lhapdf_dirs[1]],
+                extra_compile_args=["-std=c++11"],
                 ),
         ]
     return ext_modules
